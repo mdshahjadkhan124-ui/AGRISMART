@@ -2,13 +2,17 @@
 
 **No AI/ML anywhere in this project.** Everywhere an ML feature would normally sit, this app uses rule-based lookups or manual/expert review instead. See `README.md` for the stack overview.
 
-## ⚠️ Known blocker (affects Phase 1–6 verification)
+## ⚠️ Known blocker (Atlas specifically — DB logic itself is now tested)
 
-The backend cannot reach MongoDB Atlas yet — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Everything that doesn't touch the database has been verified (see below); anything DB-backed (health check's `"database": "connected"`, actual register/login/seed) is written and smoke-tested for wiring/logic but **not yet run against a live database**. Fix:
+The backend still cannot reach **MongoDB Atlas** — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Fix:
 
 1. [MongoDB Atlas](https://cloud.mongodb.com) → your project → **Network Access**
 2. **Add IP Address** → **Allow Access from Anywhere** (`0.0.0.0/0`)
-3. Tell the assistant once it's applied (~1 min) to re-verify
+3. Tell the assistant once it's applied (~1 min) to re-verify `npm run dev` + `npm run seed` against your real cluster
+
+**This is narrower than it was through Phase 6.** Phase 7 added a real automated test suite that runs against an actual (in-memory, not mocked) MongoDB via `mongodb-memory-server` — so all the database-backed logic (registration, login, RBAC ownership checks, the crop suggestion and disease-report flows) **is now genuinely verified**, just not against your specific Atlas cluster. Running `npm test` in `backend/` doesn't require Atlas access at all. What Atlas access still gates: confirming your specific cluster/credentials work, and testing through the actual frontend against real persisted data.
+
+**The test suite caught a real, previously-invisible bug**: `User.model.js`'s password-hashing `pre('save')` hook used the old callback-style signature (`async function(next) { ...; next(); }`), which modern Mongoose/Kareem no longer supports for `async` functions — it throws `TypeError: next is not a function`. This had been silently broken since Phase 2 and would have made **every single registration fail** the moment Atlas became reachable, because it was never exercised against a real database until Phase 7's tests ran. Fixed to the correct modern pattern (no `next` parameter, just `async`/`await`/return). This is exactly the kind of bug the Atlas blocker had been hiding across Phases 2–6's "code complete, DB-backed testing pending" notes.
 
 ## Phase 1 — Scaffolding ✅
 
@@ -211,4 +215,25 @@ curl -X POST http://localhost:5000/api/v1/weather/current
 - The Agricultural Officer role, unaddressed since Phase 1, now has *something* (a region-wide analytics view) — but the fuller "verifies farmer data, monitors disease reports on a map" description from the original role list was never scheduled in any phase's bullet points and remains a gap. Worth flagging explicitly rather than quietly leaving it unaddressed.
 - Broader audit-log coverage (payments, other admin-adjacent actions) beyond role/status changes is a reasonable extension but wasn't literally asked for by "Super Admin panel (user management, audit logs)" — scoped to what was requested.
 
-## Phase 7 — Polish (not started)
+## Phase 7 — Polish ✅
+
+- [x] **Swagger/OpenAPI docs**: all 51 endpoints across every route file annotated with JSDoc `@openapi` blocks (summary, tags, request bodies, responses, including the `501 Not Configured` gates and RBAC-relevant 403s). Live at `http://localhost:5000/api/v1/docs`, verified by both parsing the generated spec (51 paths found) and fetching the rendered Swagger UI page.
+- [x] **Test suite** (`backend/tests/`, run via `npm test` → Node's built-in test runner, no extra framework needed): 15 unit tests for the four rule-based engines (soil health scorer, crop matcher, fertilizer recommender, FAQ chatbot — including a determinism check), plus 23 integration tests against a real in-memory MongoDB (`mongodb-memory-server`, no Atlas/network required) covering the full auth flow (register/login/refresh/logout, duplicate email, weak password, wrong password, missing/garbage tokens), RBAC boundaries (farmer vs. expert vs. seller vs. super admin, farm ownership, admin self-protection), the crop suggestion route, and the full disease-report review flow (queue → respond → resolved → visible to farmer, plus double-respond and cross-farmer-access rejection). **All 38 tests pass.**
+  - Found and fixed a real, previously-invisible bug in the process: `User.model.js`'s password hashing hook used the old Mongoose callback pattern mixed with `async`, which throws `TypeError: next is not a function` on every actual save. This had been broken since Phase 2 and never caught because it only fires on a real DB write — which never happened until an in-memory Mongo was available to test against. See the blocker note above for the full story.
+  - Auth rate limiting (20 req/15min) and the general API limiter (300 req/15min) are both relaxed under `NODE_ENV=test`, since the suite legitimately exceeds both.
+- [x] **Root README.md**: expanded with a features-by-role list, the rule-based-design table (what replaces each would-be-ML feature and how), full tech stack, project structure, two setup paths (native + Docker Compose), environment variable notes, and test instructions.
+- [x] **Docker Compose**: `docker-compose.yml` (mongo + backend + frontend, with `MONGO_URI` overridden to the local Mongo container regardless of what's in `backend/.env`) plus a `Dockerfile`/`.dockerignore` per app. Config validated with `docker compose config` (correctly resolves the Mongo override and both `.env` files) — a live `docker compose up` could **not** be verified in this sandboxed environment because the Docker daemon itself isn't reachable here (CLI present, engine unavailable), confirmed via `docker ps` also failing. Worth a real run on your machine before relying on it.
+
+### Notes / decisions made during Phase 7
+
+- Chose Node's built-in `node --test` over Jest/Vitest — zero extra framework dependency, and Node 24 (this project's runtime) has a mature, stable test runner. `mongodb-memory-server` and `supertest` were the only test-only additions.
+- The disease-report flow test seeds a `pending` report directly via the model rather than exercising the real multipart upload, since that would require live Cloudinary credentials; the upload → Cloudinary boundary itself was already smoke-tested manually in Phase 4. The test instead focuses on what's more valuable to regression-test: the queue → respond → resolved workflow and its RBAC/ownership boundaries.
+- `docker-compose.yml` mounts `src/` (and `tests/` for the backend) as bind volumes for live-reload during local dev, but not `node_modules` or `package.json` — changing dependencies still requires a rebuild (`docker compose up --build`), which is the standard tradeoff for this style of dev setup.
+
+## What's left / known gaps
+
+- Live verification against your actual MongoDB Atlas cluster (blocked on Network Access — see above).
+- A live `docker compose up` run (config validated, daemon unavailable here).
+- The Agricultural Officer role has region-wide analytics but not the fuller "verify farmer data / disease report map" experience described in the original role list — never scheduled in any phase's bullet points (see Phase 6 notes).
+- Frontend has no automated tests (backend only, per the spec's Phase 7 ask) and no code-splitting yet — Recharts/Leaflet push the main JS bundle over Vite's 500KB warning threshold.
+- Broader audit-log coverage (payments, non-admin-panel sensitive actions) beyond role/status changes was scoped out as not literally requested.

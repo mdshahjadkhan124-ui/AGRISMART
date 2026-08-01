@@ -28,19 +28,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-app.use(
-  morgan(env.nodeEnv === 'production' ? 'combined' : 'dev', {
-    stream: { write: (msg) => logger.http(msg.trim()) },
-  })
-);
+if (env.nodeEnv !== 'test') {
+  app.use(
+    morgan(env.nodeEnv === 'production' ? 'combined' : 'dev', {
+      stream: { write: (msg) => logger.http(msg.trim()) },
+    })
+  );
+}
 
 // General API rate limit; stricter limits are layered on top of this for
-// sensitive routes like /auth in later phases.
+// sensitive routes like /auth. Relaxed under the test suite, which
+// legitimately makes far more than 300 requests per run.
 app.use(
   '/api',
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: env.nodeEnv === 'test' ? 100000 : 300,
     standardHeaders: true,
     legacyHeaders: false,
   })

@@ -1,0 +1,40 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - '5000:5000'
+    env_file:
+      - ./backend/.env
+    environment:
+      # Always use the local Mongo container under Docker Compose, regardless
+      # of what backend/.env points at (Atlas or otherwise) for native runs.
+      MONGO_URI: mongodb://mongo:27017/agrismart
+    depends_on:
+      - mongo
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend/src:/app/src
+
+volumes:
+  mongo-data:
