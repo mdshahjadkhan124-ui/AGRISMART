@@ -2,7 +2,7 @@
 
 **No AI/ML anywhere in this project.** Everywhere an ML feature would normally sit, this app uses rule-based lookups or manual/expert review instead. See `README.md` for the stack overview.
 
-## ⚠️ Known blocker (affects Phase 1–4 verification)
+## ⚠️ Known blocker (affects Phase 1–5 verification)
 
 The backend cannot reach MongoDB Atlas yet — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Everything that doesn't touch the database has been verified (see below); anything DB-backed (health check's `"database": "connected"`, actual register/login/seed) is written and smoke-tested for wiring/logic but **not yet run against a live database**. Fix:
 
@@ -156,7 +156,32 @@ curl -X POST http://localhost:5000/api/v1/weather/current
 - The disease queue intentionally has no separate "claim" step — whichever expert answers first resolves it. Coordination between multiple experts (assignment, in-progress locking) is a reasonable future addition but wasn't asked for and would add state complexity without a clear MVP need.
 - Found and fixed a copy-paste bug while writing `fertilizerRecommendation.js`'s level classifier — caught immediately by the unit smoke test before it ever reached a route.
 
-## Phase 5 — Expert, Marketplace & Government (not started)
+## Phase 5 — Expert, Marketplace & Government ✅ (code complete, DB-backed testing pending)
+
+**Backend**
+- [x] **Expert directory**: `ExpertProfile` model (specialization, qualifications, experience, consultation fee, availability) with self-service `GET/PUT /experts/me`, plus a public `GET /experts` directory and `GET /experts/:id` detail — only experts who've filled out a profile are listed, which nudges completion.
+- [x] **Appointment booking**: `Appointment` model (`pending → confirmed/rejected → completed`, plus `cancelled`) under `POST/GET /appointments`, `GET /appointments/:id`, `PUT /appointments/:id/status`. Status changes are governed by an explicit transition table (`ALLOWED_TRANSITIONS` in `appointment.service.js`) keyed by *which side of the appointment the caller is* — e.g. only the expert can confirm/reject a pending request, either side can cancel, only the expert can mark it completed. Ownership (`getOwnedAppointment`) means only the two participants can ever see or act on an appointment.
+- [x] **Chat** (`ChatMessage` model, nested under `/appointments/:id/messages`): plain REST send/list scoped to the same two participants. This is intentionally REST-only for now — real-time delivery via Socket.IO is Phase 6 as originally planned; the frontend polls every 5s in the meantime.
+- [x] **Video/audio call placeholder**: `GET /appointments/:id/call` returns a room id and a note that no provider (Twilio Video / Daily.co / Agora) is wired up yet — exactly the "scaffolding" the spec asked for, not a real call.
+- [x] **Marketplace products**: `MarketplaceProduct` model with seller-owned CRUD (`POST/GET /marketplace/products/mine`, `PUT/DELETE /marketplace/products/:id`) plus a public browse/search/category-filter endpoint (`GET /marketplace/products`, text-indexed). Optional product photo reuses the same Cloudinary upload pattern as disease reports.
+- [x] **Orders + simulated payments** (`Order` + `Payment` models — "functional-level," no real gateway): checkout (`POST /marketplace/orders`) validates every cart item belongs to the *same* seller (an order is single-seller by design, which keeps fulfillment ownership unambiguous), atomically reserves stock per item with rollback if a later item is unavailable, and creates a `Payment` record — `mock_online` is marked successful immediately, `cod` stays pending until the seller marks the order delivered. Seller fulfillment via `GET /marketplace/orders/seller` and `PUT /marketplace/orders/:id/status`; cancelling restores stock.
+- [x] **Government schemes**: `GovernmentScheme` model, publicly browsable/searchable (`GET /schemes`, `GET /schemes/:id`), managed by any gov admin or super admin (`POST/PUT/DELETE /schemes/:id`) — schemes are a shared government resource, not personal data, so there's deliberately no per-creator ownership restriction on editing.
+- [x] Smoke-tested: RBAC boundaries across all four roles (farmer/expert/seller/gov_admin) and every validation path, all without a live DB.
+- [ ] Not yet exercised against a live database — pending Atlas fix
+
+**Frontend**
+- [x] `/experts` + `/experts/:id` (browse + book), `/expert/profile` (expert self-service), `/appointments` + `/appointments/:id` (role-aware list/detail, in-page chat panel, call placeholder panel, status action buttons that mirror the backend's transition rules)
+- [x] `/marketplace` + `/marketplace/:id` (browse/search/filter + buy-now checkout), `/orders` + `/orders/:id` (farmer order history)
+- [x] `/seller/products` (listing CRUD with optional photo upload) + `/seller/orders` (fulfillment actions)
+- [x] `/schemes` + `/schemes/:id` (open to any authenticated role) + `/admin/schemes` (gov admin/super admin CRUD)
+- [x] Dashboard now has role-specific shortcut sections for all six roles except Agricultural Officer (still pending a dedicated phase)
+- [x] Build verified (`tsc -b && vite build`), dev server verified serving all 14 new routes
+
+### Notes / decisions made during Phase 5
+
+- An order is scoped to exactly one seller — checkout rejects a cart mixing products from two different sellers with a clear error, rather than trying to split/partially fulfill it. A buyer with a multi-seller cart simply places separate orders. This keeps `Order.seller` unambiguous for RBAC and avoids a much more complex multi-party fulfillment model that wasn't asked for.
+- Chat is REST + 5s polling for now, not Socket.IO — deliberately deferred to Phase 6 ("Socket.IO notifications + chat") per the original phase plan, so the data layer (ownership-scoped `ChatMessage`) is ready for real-time delivery to be layered on top without a schema change.
+- Appointment status transitions are enforced server-side via an explicit lookup table rather than scattered `if` checks — makes "who can do what from which state" auditable in one place (`appointment.service.js`).
 
 ## Phase 6 — Real-time & Admin (not started)
 

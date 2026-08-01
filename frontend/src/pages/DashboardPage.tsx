@@ -50,18 +50,61 @@ export default function DashboardPage() {
           <Button variant="outline" asChild>
             <Link to="/disease-reports">Disease Reports</Link>
           </Button>
-        </div>
-      )}
-
-      {user.role === 'expert' && (
-        <div className="flex gap-3">
-          <Button asChild>
-            <Link to="/expert/disease-queue">Disease Report Queue</Link>
+          <Button variant="outline" asChild>
+            <Link to="/experts">Find an Expert</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/appointments">My Appointments</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/marketplace">Marketplace</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/orders">My Orders</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/schemes">Government Schemes</Link>
           </Button>
         </div>
       )}
 
-      {user.role !== 'farmer' && user.role !== 'expert' && (
+      {user.role === 'expert' && (
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/appointments">Consultation Requests</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/expert/disease-queue">Disease Report Queue</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/expert/profile">My Expert Profile</Link>
+          </Button>
+        </div>
+      )}
+
+      {user.role === 'seller' && (
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/seller/products">My Products</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/seller/orders">Orders</Link>
+          </Button>
+        </div>
+      )}
+
+      {(user.role === 'gov_admin' || user.role === 'super_admin') && (
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/admin/schemes">Manage Schemes</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/schemes">View Schemes</Link>
+          </Button>
+        </div>
+      )}
+
+      {user.role === 'officer' && (
         <p className="text-muted-foreground text-sm">
           Role-specific features for {roleLabels[user.role]} land in the phases that follow.
         </p>
