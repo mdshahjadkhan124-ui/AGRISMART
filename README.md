@@ -41,7 +41,6 @@ Agrismart/
 │   ├── src/           config, routes, controllers, services, models, middleware, validators, utils, data, sockets
 │   └── tests/          unit/ (rule-based engines) and integration/ (auth, RBAC, crop suggestion, disease flow)
 ├── docs/              project documentation
-├── docker-compose.yml  local dev: frontend + backend + MongoDB
 └── PROGRESS.md         phase-by-phase build log and demo credentials
 ```
 
@@ -50,38 +49,26 @@ Agrismart/
 ### Prerequisites
 
 - Node.js 20+
-- A MongoDB Atlas cluster (or local MongoDB — see the Docker option below)
+- A MongoDB Atlas cluster (or a local MongoDB instance)
 
-### Option A — run natively
+### Backend
 
-**Backend**
 ```bash
 cd backend
-cp .env.example .env   # fill in your own values — see Environment variables below
+cp .env.example .env   # fill in your own values — at minimum MONGO_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
 npm install
 npm run dev             # http://localhost:5000
 npm run seed             # optional: creates one demo account per role
 ```
 
-**Frontend** (separate terminal)
+### Frontend (separate terminal)
+
 ```bash
 cd frontend
 cp .env.example .env
 npm install
 npm run dev              # http://localhost:5173
 ```
-
-### Option B — Docker Compose
-
-Brings up MongoDB, the backend, and the frontend together, using a local Mongo container instead of Atlas:
-
-```bash
-cp backend/.env.example backend/.env     # fill in JWT secrets at minimum
-cp frontend/.env.example frontend/.env
-docker compose up --build
-```
-
-Frontend: `http://localhost:5173` · Backend: `http://localhost:5000`
 
 ### Environment variables
 
