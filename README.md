@@ -30,6 +30,7 @@ cd backend
 cp .env.example .env   # fill in your own values
 npm install
 npm run dev             # http://localhost:5000
+npm run seed             # optional: creates one demo account per role
 ```
 
 ### Frontend
