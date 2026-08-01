@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
 import { isAxiosError } from 'axios'
 import { setAccessToken } from '@/lib/axios'
+import { connectSocket, disconnectSocket } from '@/lib/socket'
 import * as authApi from './authApi'
 import type { AuthResponseData, User } from './types'
 
@@ -74,6 +75,7 @@ const authSlice = createSlice({
       state.user = null
       state.accessToken = null
       state.status = 'unauthenticated'
+      disconnectSocket()
     },
   },
   extraReducers: (builder) => {
@@ -83,6 +85,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken
       state.error = null
       setAccessToken(action.payload.accessToken)
+      connectSocket(action.payload.accessToken)
     }
 
     builder
@@ -115,6 +118,7 @@ const authSlice = createSlice({
         state.user = null
         state.accessToken = null
         setAccessToken(null)
+        disconnectSocket()
       })
 
       .addCase(logout.fulfilled, (state) => {
@@ -122,6 +126,7 @@ const authSlice = createSlice({
         state.user = null
         state.accessToken = null
         setAccessToken(null)
+        disconnectSocket()
       })
   },
 })

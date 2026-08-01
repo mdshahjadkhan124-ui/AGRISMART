@@ -1,6 +1,7 @@
 const DiseaseReport = require('../models/DiseaseReport.model');
 const ApiError = require('../utils/ApiError');
 const imageUploadService = require('./imageUpload.service');
+const notificationService = require('./notification.service');
 const { getPagination, buildMeta } = require('../utils/pagination');
 
 async function createReport(userId, { cropName, symptoms, farmId }, file) {
@@ -57,6 +58,15 @@ async function respondToReport(expertId, reportId, { diagnosis, treatment }) {
   report.expert = expertId;
   report.reviewedAt = new Date();
   await report.save();
+
+  await notificationService.notify({
+    userId: report.farmer.toString(),
+    type: 'disease_report',
+    title: 'Disease report reviewed',
+    message: `An expert reviewed your "${report.cropName}" report.`,
+    link: `/disease-reports/${report._id}`,
+  });
+
   return report;
 }
 

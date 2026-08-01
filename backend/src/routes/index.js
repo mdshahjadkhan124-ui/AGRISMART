@@ -12,6 +12,10 @@ const appointmentRoutes = require('./appointment.routes');
 const marketplaceProductRoutes = require('./marketplaceProduct.routes');
 const marketplaceOrderRoutes = require('./marketplaceOrder.routes');
 const governmentSchemeRoutes = require('./governmentScheme.routes');
+const notificationRoutes = require('./notification.routes');
+const chatbotRoutes = require('./chatbot.routes');
+const analyticsRoutes = require('./analytics.routes');
+const adminRoutes = require('./admin.routes');
 
 const router = Router();
 
@@ -28,8 +32,9 @@ router.use('/appointments', appointmentRoutes);
 router.use('/marketplace/products', marketplaceProductRoutes);
 router.use('/marketplace/orders', marketplaceOrderRoutes);
 router.use('/schemes', governmentSchemeRoutes);
-
-// Future phases mount their routers here, e.g.:
-// router.use('/notifications', notificationRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/chatbot', chatbotRoutes);
+router.use('/analytics', analyticsRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -3,6 +3,7 @@ const MarketplaceProduct = require('../models/MarketplaceProduct.model');
 const Order = require('../models/Order.model');
 const Payment = require('../models/Payment.model');
 const ApiError = require('../utils/ApiError');
+const notificationService = require('./notification.service');
 const { getPagination, buildMeta } = require('../utils/pagination');
 
 function generateTransactionRef() {
@@ -80,6 +81,15 @@ async function createOrder(buyerId, { items, shippingAddress, paymentMethod }) {
 
   order.payment = payment._id;
   await order.save();
+
+  await notificationService.notify({
+    userId: order.seller.toString(),
+    type: 'order',
+    title: 'New order received',
+    message: `A new order for ₹${totalAmountInr} was placed.`,
+    link: `/seller/orders`,
+  });
+
   return order;
 }
 
@@ -130,6 +140,14 @@ async function updateOrderStatus(sellerId, orderId, status) {
       }))
     );
   }
+
+  await notificationService.notify({
+    userId: order.buyer.toString(),
+    type: 'order',
+    title: 'Order updated',
+    message: `Your order is now "${status}".`,
+    link: `/orders/${order._id}`,
+  });
 
   return order;
 }

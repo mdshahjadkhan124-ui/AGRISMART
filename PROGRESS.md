@@ -2,7 +2,7 @@
 
 **No AI/ML anywhere in this project.** Everywhere an ML feature would normally sit, this app uses rule-based lookups or manual/expert review instead. See `README.md` for the stack overview.
 
-## ⚠️ Known blocker (affects Phase 1–5 verification)
+## ⚠️ Known blocker (affects Phase 1–6 verification)
 
 The backend cannot reach MongoDB Atlas yet — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Everything that doesn't touch the database has been verified (see below); anything DB-backed (health check's `"database": "connected"`, actual register/login/seed) is written and smoke-tested for wiring/logic but **not yet run against a live database**. Fix:
 
@@ -183,6 +183,32 @@ curl -X POST http://localhost:5000/api/v1/weather/current
 - Chat is REST + 5s polling for now, not Socket.IO — deliberately deferred to Phase 6 ("Socket.IO notifications + chat") per the original phase plan, so the data layer (ownership-scoped `ChatMessage`) is ready for real-time delivery to be layered on top without a schema change.
 - Appointment status transitions are enforced server-side via an explicit lookup table rather than scattered `if` checks — makes "who can do what from which state" auditable in one place (`appointment.service.js`).
 
-## Phase 6 — Real-time & Admin (not started)
+## Phase 6 — Real-time & Admin ✅ (code complete, DB-backed testing pending)
+
+**Backend**
+- [x] **Socket.IO real-time layer** (`sockets/index.js`): every socket authenticates with the same JWT access token used for REST (`io.use` middleware), joins a personal `user:<id>` room, and can join an `appointment:<id>` chat room — ownership is re-checked server-side on every join, not just at REST-request time. Tracks online users in-memory (`Map<userId, Set<socketId>>`) for a lightweight presence check when a chat room is joined. Typing indicators broadcast to the room, excluding the sender.
+- [x] **Notifications** (`Notification` model, `notification.service.js`): every notification is persisted first, then pushed over the socket if the recipient is connected — so it's never lost if they're offline, and appears live if they're online. Wired into every flow that has an obvious "someone should be told" moment: new appointment request, appointment status change, new chat message, disease report resolved, new order, order status change. `GET/PUT /notifications`.
+- [x] **Live chat upgrade**: `chat.service.js` now emits over the socket (`chat:message`) in addition to persisting, so both participants see new messages instantly if connected; REST + a 15s poll remain the fallback.
+- [x] **Video/audio call placeholder**: unchanged from Phase 5, still explicitly a scaffold.
+- [x] **Rule-based FAQ chatbot** (`data/faq.js` + `utils/faqChatbot.js`): a curated ~10-entry Hindi+English Q&A set covering the app's main features; matching is pure keyword-overlap counting (most keyword hits wins, ties go to first entry) — **no LLM/AI generation anywhere**. `POST /chatbot/query`, unit-verified in both languages plus the no-match fallback.
+- [x] **Role-specific analytics** (`analytics.service.js`): a single `GET /analytics/me` endpoint dispatches by the caller's role — farmer (farm/order/appointment counts, soil health trend, disease report status breakdown), expert (appointment status breakdown, reports resolved), seller (product count, order status breakdown, delivered revenue), officer (region-wide farmer/farm counts + disease report breakdown — a reasonable "regional oversight" lite view, since no phase ever scheduled the full disease-report map), gov admin (scheme counts by category), super admin (platform-wide: users by role, totals, revenue).
+- [x] **Super Admin panel**: `AuditLog` model + `GET /admin/users` (search/filter), `PUT /admin/users/:id/role` (the role-elevation mechanism promised back in Phase 2 — public registration still only ever creates farmers), `PUT /admin/users/:id/status` (activate/deactivate), `GET /admin/audit-logs`. Role and status changes are audit-logged with before/after values; a user can't change their own role or deactivate themselves.
+- [x] Smoke-tested: Socket.IO auth middleware (rejects bad tokens, accepts valid ones, verified with a real `socket.io-client` connection — added as a backend devDependency), chatbot matching in English and Hindi, admin RBAC boundaries, notification route auth-guarding — all without a live DB.
+- [ ] Not yet exercised against a live database — pending Atlas fix
+
+**Frontend**
+- [x] `lib/socket.ts` — connects once per login (same access token as REST), disconnects on logout/session-expiry, wired into `authSlice`'s success/logout handlers
+- [x] Global `NotificationBell` (unread badge, live-updating list via the socket) and `ChatbotWidget` (language toggle, floating panel) — both rendered from `App.tsx` whenever authenticated, not tied to any one page
+- [x] Appointment chat now listens for `chat:message` over the socket (falls back to a 15s poll) and shows a "Typing…" indicator
+- [x] `/analytics` — role-aware dashboard using Recharts (`CountBarChart`, `TrendLineChart`, `StatTile` — new reusable `components/common/` primitives), one view per role
+- [x] `/admin/users` (role dropdown + activate/deactivate per user) and `/admin/audit-logs`, both super-admin only
+- [x] Build verified (`tsc -b && vite build`), dev server verified serving all new routes
+
+### Notes / decisions made during Phase 6
+
+- A socket authenticates once at connect time and isn't re-validated as the JWT ages — acceptable here since access tokens are short-lived and sessions are naturally bounded, but a stricter production setup would want the client to reconnect on token refresh. Documented as a known simplification.
+- Analytics charts use the app's `--primary` token rather than shadcn Nova's grayscale `--chart-1..5` variables — those are near-white/near-black and disappear against the app's light background; single-series bar/line charts only need one on-brand color since the category axis already carries identity.
+- The Agricultural Officer role, unaddressed since Phase 1, now has *something* (a region-wide analytics view) — but the fuller "verifies farmer data, monitors disease reports on a map" description from the original role list was never scheduled in any phase's bullet points and remains a gap. Worth flagging explicitly rather than quietly leaving it unaddressed.
+- Broader audit-log coverage (payments, other admin-adjacent actions) beyond role/status changes is a reasonable extension but wasn't literally asked for by "Super Admin panel (user management, audit logs)" — scoped to what was requested.
 
 ## Phase 7 — Polish (not started)

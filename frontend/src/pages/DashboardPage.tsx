@@ -65,6 +65,9 @@ export default function DashboardPage() {
           <Button variant="outline" asChild>
             <Link to="/schemes">Government Schemes</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analytics">My Analytics</Link>
+          </Button>
         </div>
       )}
 
@@ -79,6 +82,9 @@ export default function DashboardPage() {
           <Button variant="outline" asChild>
             <Link to="/expert/profile">My Expert Profile</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analytics">My Analytics</Link>
+          </Button>
         </div>
       )}
 
@@ -89,6 +95,9 @@ export default function DashboardPage() {
           </Button>
           <Button variant="outline" asChild>
             <Link to="/seller/orders">Orders</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analytics">My Analytics</Link>
           </Button>
         </div>
       )}
@@ -101,13 +110,29 @@ export default function DashboardPage() {
           <Button variant="outline" asChild>
             <Link to="/schemes">View Schemes</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link to="/analytics">Analytics</Link>
+          </Button>
+        </div>
+      )}
+
+      {user.role === 'super_admin' && (
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/admin/users">Manage Users</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/admin/audit-logs">Audit Logs</Link>
+          </Button>
         </div>
       )}
 
       {user.role === 'officer' && (
-        <p className="text-muted-foreground text-sm">
-          Role-specific features for {roleLabels[user.role]} land in the phases that follow.
-        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/analytics">Regional Analytics</Link>
+          </Button>
+        </div>
       )}
     </div>
   )

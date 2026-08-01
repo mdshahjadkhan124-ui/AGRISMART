@@ -1,5 +1,6 @@
 const Appointment = require('../models/Appointment.model');
 const ApiError = require('../utils/ApiError');
+const notificationService = require('./notification.service');
 const { getPagination, buildMeta } = require('../utils/pagination');
 
 // Who is allowed to move an appointment from which status to which, based
@@ -11,7 +12,17 @@ const ALLOWED_TRANSITIONS = {
 };
 
 async function bookAppointment(farmerId, { expertId, ...rest }) {
-  return Appointment.create({ ...rest, farmer: farmerId, expert: expertId });
+  const appointment = await Appointment.create({ ...rest, farmer: farmerId, expert: expertId });
+
+  await notificationService.notify({
+    userId: expertId,
+    type: 'appointment',
+    title: 'New consultation request',
+    message: `A farmer requested a ${appointment.meetingType} consultation.`,
+    link: `/appointments/${appointment._id}`,
+  });
+
+  return appointment;
 }
 
 async function listMyAppointments(userId, role, query) {
@@ -57,6 +68,16 @@ async function updateStatus(appointmentId, userId, { status, expertNotes }) {
   appointment.status = status;
   if (expertNotes != null && actorRole === 'expert') appointment.expertNotes = expertNotes;
   await appointment.save();
+
+  const recipientId = actorRole === 'expert' ? appointment.farmer._id.toString() : appointment.expert._id.toString();
+  await notificationService.notify({
+    userId: recipientId,
+    type: 'appointment',
+    title: 'Appointment updated',
+    message: `Your appointment is now "${status}".`,
+    link: `/appointments/${appointment._id}`,
+  });
+
   return appointment;
 }
 

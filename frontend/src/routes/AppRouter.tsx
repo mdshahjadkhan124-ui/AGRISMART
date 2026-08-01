@@ -27,6 +27,9 @@ import SellerOrdersPage from '@/pages/seller/SellerOrdersPage'
 import SchemesPage from '@/pages/schemes/SchemesPage'
 import SchemeDetailPage from '@/pages/schemes/SchemeDetailPage'
 import GovSchemesAdminPage from '@/pages/gov/GovSchemesAdminPage'
+import AnalyticsPage from '@/pages/analytics/AnalyticsPage'
+import AdminUsersPage from '@/pages/admin/AdminUsersPage'
+import AdminAuditLogsPage from '@/pages/admin/AdminAuditLogsPage'
 import ProtectedRoute from './ProtectedRoute'
 
 export default function AppRouter() {
@@ -41,6 +44,7 @@ export default function AppRouter() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/schemes" element={<SchemesPage />} />
         <Route path="/schemes/:id" element={<SchemeDetailPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['farmer']} />}>
@@ -79,6 +83,11 @@ export default function AppRouter() {
 
       <Route element={<ProtectedRoute allowedRoles={['gov_admin', 'super_admin']} />}>
         <Route path="/admin/schemes" element={<GovSchemesAdminPage />} />
+      </Route>
+
+      <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+        <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

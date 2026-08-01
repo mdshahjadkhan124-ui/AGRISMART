@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useAppSelector } from '@/app/hooks'
-import { useAppointment, useCallInfo, useMessages, useSendMessage, useUpdateAppointmentStatus } from '@/features/appointments/hooks'
+import {
+  useAppointment,
+  useCallInfo,
+  useMessages,
+  useSendMessage,
+  useTypingIndicator,
+  useUpdateAppointmentStatus,
+} from '@/features/appointments/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,6 +27,7 @@ function ChatPanel({ appointmentId }: { appointmentId: string }) {
   const userId = useAppSelector((state) => state.auth.user?.id)
   const { data: messages } = useMessages(appointmentId)
   const sendMessage = useSendMessage(appointmentId)
+  const { otherTyping, notifyTyping } = useTypingIndicator(appointmentId)
   const [text, setText] = useState('')
 
   const onSend = () => {
@@ -45,11 +53,15 @@ function ChatPanel({ appointmentId }: { appointmentId: string }) {
               {message.text}
             </div>
           ))}
+          {otherTyping && <p className="text-muted-foreground text-xs">Typing…</p>}
         </div>
         <div className="flex gap-2">
           <Input
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value)
+              notifyTyping()
+            }}
             onKeyDown={(e) => e.key === 'Enter' && onSend()}
             placeholder="Type a message…"
           />
