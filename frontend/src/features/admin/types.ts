@@ -18,6 +18,9 @@ export interface AuditLogEntry {
   action: string
   targetType: string
   targetId?: string
-  metadata: Record<string, unknown>
+  // Optional: older audit log entries created before the backend's
+  // minimize:false fix may not have this field at all (Mongoose used to
+  // strip empty-object fields from storage) — never assume it's present.
+  metadata?: Record<string, unknown>
   createdAt: string
 }
