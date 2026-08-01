@@ -2,7 +2,7 @@
 
 **No AI/ML anywhere in this project.** Everywhere an ML feature would normally sit, this app uses rule-based lookups or manual/expert review instead. See `README.md` for the stack overview.
 
-## ⚠️ Known blocker (affects Phase 1 + Phase 2 verification)
+## ⚠️ Known blocker (affects Phase 1–3 verification)
 
 The backend cannot reach MongoDB Atlas yet — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Everything that doesn't touch the database has been verified (see below); anything DB-backed (health check's `"database": "connected"`, actual register/login/seed) is written and smoke-tested for wiring/logic but **not yet run against a live database**. Fix:
 
@@ -93,7 +93,44 @@ Public registration (`/register` page) always creates a **farmer** account — t
 - Access token lives in memory (Redux store) only, never `localStorage` — mitigates XSS token theft. Session persistence across page reloads relies on the httpOnly refresh cookie + silent-refresh-on-load.
 - Express 5 and Mongoose 9 were installed (latest majors as of scaffolding) — flagging in case any phase needs a syntax/behavior note versus older Express 4 / Mongoose 7 tutorials.
 
-## Phase 3 — Core Farmer Features (not started)
+## Phase 3 — Core Farmer Features ✅ (code complete, DB-backed testing pending)
+
+**Backend**
+- [x] `FarmerProfile` model (1:1 with a farmer `User`) + `GET/PUT /farmers/me`
+- [x] `Farm` model (name, area, soil type, irrigation type, optional lat/lng) with full CRUD under `/farms`, scoped to the logged-in farmer via a shared `getOwnedFarm` ownership check (404 if it doesn't exist, 403 if it's someone else's — reused by every farm-scoped resource below)
+- [x] `CropHistory` model + `GET/POST /farms/:farmId/crop-history`
+- [x] `SoilReport` model + `GET/POST /farms/:farmId/soil-reports`, `GET .../latest` — **rule-based soil health scorer** (`utils/soilHealthScore.js`): scores N/P/K against standard low/medium/high kg/ha brackets and pH against acid/neutral/alkaline bands, averages into a 0–100 score + Poor/Fair/Good/Excellent label, and generates plain-language fertilizer/lime recommendations. Deterministic, no ML — unit-verified with balanced/poor/partial inputs.
+- [x] `FarmActivity` model (the farm diary: sowing/irrigation/fertilizing/spraying/weeding/harvesting/soil_testing/other) with full CRUD under `/farms/:farmId/activities`
+- [x] `WeatherLog` model + OpenWeather integration (`services/weather.service.js`): `GET /weather/current` and `GET /weather/forecast`, gated behind `OPENWEATHER_API_KEY` (returns `501` until configured, same pattern as Google OAuth/OTP in Phase 2); every successful lookup is logged (best-effort) for history/analytics
+- [x] Pagination (`page`/`limit` → `meta.total`/`totalPages`) on soil reports and activities lists
+- [x] Found and fixed a real bug during smoke-testing: Express's `req.query` is a getter-only property — assigning to it silently no-ops. Query-string validation now stashes its parsed result on `req.validatedQuery` instead (see `middleware/validate.js`)
+- [x] Smoke-tested: auth guarding, Zod validation, and the weather `501 Not Configured` gate all verified without a live DB
+- [ ] Not yet exercised against a live database — pending Atlas fix
+
+**Frontend**
+- [x] `/profile` — farmer profile form (address/village/district/state/pincode/experience/bio)
+- [x] `/farms` — list + create farm
+- [x] `/farms/:farmId` — farm detail with a weather widget and three tabs: **Soil health** (latest score/label/recommendations + log-a-test form + history), **Crop history** (add/list past crops by season), **Activity diary** (log/list/delete farm activities)
+- [x] All new data fetching uses TanStack Query (`features/farms`, `features/profile`, `features/weather`); Redux stays scoped to auth as originally intended
+- [x] Added shadcn `select`, `textarea`, `tabs`, `badge` components (no new npm dependencies — already covered by the installed `radix-ui` meta-package)
+- [x] Dashboard now links farmers to "My Farms" / "My Profile"; new routes are role-gated to `farmer` via `ProtectedRoute`
+- [x] Fixed a real TypeScript issue: Zod v4's `z.coerce.number()` gives the parsed *output* type `number` but the raw *input* type `unknown`, which broke `useForm`'s single-generic inference on every form with a numeric field. Fixed by typing each form as `useForm<InputType, unknown, OutputType>` (RHF's 3-generic form) using `z.input<...>` / `z.output<...>` — a pattern that'll be needed again for any future form with coerced fields.
+- [x] Build verified (`tsc -b && vite build`), dev server verified serving all new routes
+
+### How to test the backend right now (no live DB needed)
+
+```bash
+curl http://localhost:5000/api/v1/farms
+# -> 401 (no token)
+curl -X POST http://localhost:5000/api/v1/weather/current
+# -> 400 (missing lat/lon) or 401 without a token
+```
+
+### Notes / decisions made during Phase 3
+
+- Soil nutrient brackets (N/P/K low/medium/high in kg/ha) follow the ranges used by India's Soil Health Card scheme — a real, citable rule-based standard, not an invented one.
+- Ownership checks live in `farm.service.js`'s `getOwnedFarm` and are reused by crop history, soil reports, and activities — one place to audit for the "can a farmer see another farmer's data" question.
+- Weather aggregation (3-hour OpenWeather steps → daily min/max/most-frequent-condition) is plain grouping/mode calculation, not forecasting — explicitly not ML.
 
 ## Phase 4 — Advisory Modules — rule-based (not started)
 

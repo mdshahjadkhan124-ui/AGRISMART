@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { logout } from '@/features/auth/authSlice'
 import { Button } from '@/components/ui/button'
@@ -31,9 +32,21 @@ export default function DashboardPage() {
           Log out
         </Button>
       </div>
-      <p className="text-muted-foreground text-sm">
-        Role-specific features for {roleLabels[user.role]} land in the phases that follow.
-      </p>
+
+      {user.role === 'farmer' ? (
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link to="/farms">My Farms</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/profile">My Profile</Link>
+          </Button>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          Role-specific features for {roleLabels[user.role]} land in the phases that follow.
+        </p>
+      )}
     </div>
   )
 }
