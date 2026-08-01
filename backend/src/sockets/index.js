@@ -1,7 +1,7 @@
 const { Server } = require('socket.io');
-const env = require('../config/env');
 const logger = require('../config/logger');
 const tokenService = require('../services/token.service');
+const { corsOrigin } = require('../config/cors');
 
 let ioInstance = null;
 // userId -> Set of socket ids, so the same user can have multiple tabs/devices open.
@@ -31,7 +31,7 @@ function getIO() {
 function initSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: env.corsOrigin,
+      origin: corsOrigin,
       credentials: true,
     },
   });

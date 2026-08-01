@@ -10,6 +10,7 @@ const swaggerUi = require('swagger-ui-express');
 const env = require('./config/env');
 const logger = require('./config/logger');
 const swaggerSpec = require('./config/swagger');
+const { corsOrigin } = require('./config/cors');
 const apiRoutes = require('./routes');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -19,7 +20,7 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin: corsOrigin,
     credentials: true,
   })
 );
