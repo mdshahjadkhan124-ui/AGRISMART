@@ -84,4 +84,4 @@ function computeSoilHealth({ nitrogen, phosphorus, potassium, ph, organicCarbon 
   };
 }
 
-module.exports = { computeSoilHealth };
+module.exports = { computeSoilHealth, NUTRIENT_BRACKETS };

@@ -30,6 +30,11 @@ function errorHandler(err, req, res, _next) {
     message = field ? `${field} already exists` : 'Duplicate value';
   }
 
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message = err.code === 'LIMIT_FILE_SIZE' ? 'Image must be smaller than 5MB' : err.message;
+  }
+
   if (statusCode >= 500) {
     logger.error(`${req.method} ${req.originalUrl} - ${err.stack || err.message}`);
   } else {

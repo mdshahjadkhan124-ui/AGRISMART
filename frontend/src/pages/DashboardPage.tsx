@@ -33,16 +33,35 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {user.role === 'farmer' ? (
-        <div className="flex gap-3">
+      {user.role === 'farmer' && (
+        <div className="flex flex-wrap gap-3">
           <Button asChild>
             <Link to="/farms">My Farms</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link to="/profile">My Profile</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link to="/crop-suggestion">Crop Suggestion</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/fertilizer-recommendation">Fertilizer Recommendation</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/disease-reports">Disease Reports</Link>
+          </Button>
         </div>
-      ) : (
+      )}
+
+      {user.role === 'expert' && (
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link to="/expert/disease-queue">Disease Report Queue</Link>
+          </Button>
+        </div>
+      )}
+
+      {user.role !== 'farmer' && user.role !== 'expert' && (
         <p className="text-muted-foreground text-sm">
           Role-specific features for {roleLabels[user.role]} land in the phases that follow.
         </p>

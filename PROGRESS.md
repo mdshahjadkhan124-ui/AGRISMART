@@ -2,7 +2,7 @@
 
 **No AI/ML anywhere in this project.** Everywhere an ML feature would normally sit, this app uses rule-based lookups or manual/expert review instead. See `README.md` for the stack overview.
 
-## ⚠️ Known blocker (affects Phase 1–3 verification)
+## ⚠️ Known blocker (affects Phase 1–4 verification)
 
 The backend cannot reach MongoDB Atlas yet — `connect ETIMEDOUT`, because the current IP isn't allowlisted. Everything that doesn't touch the database has been verified (see below); anything DB-backed (health check's `"database": "connected"`, actual register/login/seed) is written and smoke-tested for wiring/logic but **not yet run against a live database**. Fix:
 
@@ -132,7 +132,29 @@ curl -X POST http://localhost:5000/api/v1/weather/current
 - Ownership checks live in `farm.service.js`'s `getOwnedFarm` and are reused by crop history, soil reports, and activities — one place to audit for the "can a farmer see another farmer's data" question.
 - Weather aggregation (3-hour OpenWeather steps → daily min/max/most-frequent-condition) is plain grouping/mode calculation, not forecasting — explicitly not ML.
 
-## Phase 4 — Advisory Modules — rule-based (not started)
+## Phase 4 — Advisory Modules — rule-based ✅ (code complete, DB-backed testing pending)
+
+**Backend**
+- [x] **Crop suggestion** (`data/cropSuitability.js` + `utils/cropSuggestion.js`): a static lookup table of 16 common Indian field crops with ideal N/P/K/temperature/humidity/pH/rainfall ranges. Each crop gets a deterministic 0–100 score per parameter (100 inside range, linear falloff outside it), averaged and ranked — top 5 returned with season, water need, and static expected-yield/profit estimates. `POST/GET /crop-suggestions` (saves + lists history).
+- [x] **Fertilizer recommendation** (`utils/fertilizerRecommendation.js`): reuses the exact same N/P/K brackets as the Phase 3 soil health scorer (exported as `NUTRIENT_BRACKETS`) so "low nitrogen" means the same thing everywhere, then maps each level to a real fertilizer + per-acre dosage (Urea/DAP-SSP/MOP) and pH to lime/gypsum dosage. `POST/GET /fertilizer-recommendations` — accepts either explicit N/P/K/pH or a `farmId`, in which case it pulls the farm's latest soil report automatically (explicit values always win if both are given).
+- [x] **Disease reporting** (manual expert review, no CNN/classifier anywhere): `DiseaseReport` model with `pending → resolved` status. Farmer uploads a leaf photo (multipart) + crop + symptoms via `POST /disease-reports`; an expert sees it in `GET /disease-reports/queue` and answers with `PUT /disease-reports/:id/respond` (diagnosis + treatment), which resolves it. RBAC-separated: farmers can create/list/view their own reports, only experts (and super admins) can see the queue or respond.
+- [x] Image uploads: `multer.memoryStorage()` (`middleware/upload.js`, 5MB limit, image-only filter) → `cloudinary.uploader.upload_stream()` (`services/imageUpload.service.js`), gated behind `CLOUDINARY_*` config the same way OAuth/OTP/weather are — returns `501` until configured. This is the pattern flagged as a to-do back in Phase 1.
+- [x] Smoke-tested end-to-end including a real multipart upload (`FormData` + `fetch`) through multer → validation → the Cloudinary `501` gate, plus RBAC checks (expert blocked from creating reports, farmer blocked from the queue) — all without a live DB
+- [ ] Not yet exercised against a live database — pending Atlas fix
+
+**Frontend**
+- [x] `/crop-suggestion` — soil/climate input form, ranked results with match % and out-of-range factors
+- [x] `/fertilizer-recommendation` — optional farm picker (auto-fills from latest soil report) or manual N/P/K/pH entry, per-nutrient + pH amendment cards
+- [x] `/disease-reports` (list + submit, multipart form via `FormData`) and `/disease-reports/:id` (farmer detail view — image, symptoms, and diagnosis/treatment once resolved)
+- [x] `/expert/disease-queue` — new role-gated route (`allowedRoles={['expert', 'super_admin']}`) with an inline respond form per report
+- [x] Dashboard now shows farmer advisory shortcuts and, for experts, a link to the review queue
+- [x] Build verified (`tsc -b && vite build`), dev server verified serving all new routes
+
+### Notes / decisions made during Phase 4
+
+- Crop and fertilizer suggestions are persisted (`CropSuggestion`, `FertilizerRecommendation` collections) as a history, not just computed and thrown away — matches the DB design's "Advisory outputs" domain and lets a farmer look back at past recommendations.
+- The disease queue intentionally has no separate "claim" step — whichever expert answers first resolves it. Coordination between multiple experts (assignment, in-progress locking) is a reasonable future addition but wasn't asked for and would add state complexity without a clear MVP need.
+- Found and fixed a copy-paste bug while writing `fertilizerRecommendation.js`'s level classifier — caught immediately by the unit smoke test before it ever reached a route.
 
 ## Phase 5 — Expert, Marketplace & Government (not started)
 
