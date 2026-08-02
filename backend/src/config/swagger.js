@@ -1,5 +1,4 @@
 const swaggerJsdoc = require('swagger-jsdoc');
-const env = require('./env');
 
 const swaggerSpec = swaggerJsdoc({
   definition: {
@@ -12,7 +11,10 @@ const swaggerSpec = swaggerJsdoc({
         'recommendation, disease review, the FAQ chatbot) is rule-based/manual-review — there is no AI/ML ' +
         'anywhere in this API.',
     },
-    servers: [{ url: `http://localhost:${env.port}/api/v1` }],
+    // Relative so "Try it out" in Swagger UI works against whatever host
+    // actually served this page — no hardcoded localhost that would be
+    // wrong in production.
+    servers: [{ url: '/api/v1' }],
     tags: [
       { name: 'Health', description: 'Service and database status' },
       { name: 'Auth', description: 'Registration, login, session refresh, and Google OAuth (config-gated)' },

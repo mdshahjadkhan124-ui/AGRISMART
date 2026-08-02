@@ -17,6 +17,14 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// Render (and most PaaS hosts) put the app behind a reverse proxy that
+// terminates TLS and forwards requests over plain HTTP internally. Without
+// this, req.ip is the proxy's internal address for every request (breaking
+// per-IP rate limiting) and express-rate-limit's X-Forwarded-For validation
+// throws in production. Trusting exactly one hop matches a single reverse
+// proxy; it's a no-op locally since there's no proxy in front of dev.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(
   cors({
