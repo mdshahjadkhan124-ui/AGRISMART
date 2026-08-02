@@ -31,6 +31,7 @@ import AnalyticsPage from '@/pages/analytics/AnalyticsPage'
 import AdminUsersPage from '@/pages/admin/AdminUsersPage'
 import AdminAuditLogsPage from '@/pages/admin/AdminAuditLogsPage'
 import ProtectedRoute from './ProtectedRoute'
+import AppLayout from '@/components/layout/AppLayout'
 
 export default function AppRouter() {
   return (
@@ -41,53 +42,55 @@ export default function AppRouter() {
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/schemes" element={<SchemesPage />} />
-        <Route path="/schemes/:id" element={<SchemeDetailPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-      </Route>
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/schemes" element={<SchemesPage />} />
+          <Route path="/schemes/:id" element={<SchemeDetailPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
 
-      <Route element={<ProtectedRoute allowedRoles={['farmer']} />}>
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/farms" element={<FarmsListPage />} />
-        <Route path="/farms/:farmId" element={<FarmDetailPage />} />
-        <Route path="/crop-suggestion" element={<CropSuggestionPage />} />
-        <Route path="/fertilizer-recommendation" element={<FertilizerRecommendationPage />} />
-        <Route path="/disease-reports" element={<DiseaseReportsPage />} />
-        <Route path="/disease-reports/:id" element={<DiseaseReportDetailPage />} />
-        <Route path="/experts" element={<ExpertsListPage />} />
-        <Route path="/experts/:id" element={<ExpertDetailPage />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
-        <Route path="/marketplace/:id" element={<ProductDetailPage />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/orders/:id" element={<OrderDetailPage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['farmer']} />}>
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/farms" element={<FarmsListPage />} />
+            <Route path="/farms/:farmId" element={<FarmDetailPage />} />
+            <Route path="/crop-suggestion" element={<CropSuggestionPage />} />
+            <Route path="/fertilizer-recommendation" element={<FertilizerRecommendationPage />} />
+            <Route path="/disease-reports" element={<DiseaseReportsPage />} />
+            <Route path="/disease-reports/:id" element={<DiseaseReportDetailPage />} />
+            <Route path="/experts" element={<ExpertsListPage />} />
+            <Route path="/experts/:id" element={<ExpertDetailPage />} />
+            <Route path="/marketplace" element={<MarketplacePage />} />
+            <Route path="/marketplace/:id" element={<ProductDetailPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['expert', 'super_admin']} />}>
-        <Route path="/expert/disease-queue" element={<DiseaseQueuePage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['expert', 'super_admin']} />}>
+            <Route path="/expert/disease-queue" element={<DiseaseQueuePage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['expert']} />}>
-        <Route path="/expert/profile" element={<ExpertProfilePage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['expert']} />}>
+            <Route path="/expert/profile" element={<ExpertProfilePage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['farmer', 'expert']} />}>
-        <Route path="/appointments" element={<AppointmentsListPage />} />
-        <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['farmer', 'expert']} />}>
+            <Route path="/appointments" element={<AppointmentsListPage />} />
+            <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['seller']} />}>
-        <Route path="/seller/products" element={<SellerProductsPage />} />
-        <Route path="/seller/orders" element={<SellerOrdersPage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['seller']} />}>
+            <Route path="/seller/products" element={<SellerProductsPage />} />
+            <Route path="/seller/orders" element={<SellerOrdersPage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['gov_admin', 'super_admin']} />}>
-        <Route path="/admin/schemes" element={<GovSchemesAdminPage />} />
-      </Route>
+          <Route element={<ProtectedRoute allowedRoles={['gov_admin', 'super_admin']} />}>
+            <Route path="/admin/schemes" element={<GovSchemesAdminPage />} />
+          </Route>
 
-      <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
-        <Route path="/admin/users" element={<AdminUsersPage />} />
-        <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
+          </Route>
+        </Route>
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

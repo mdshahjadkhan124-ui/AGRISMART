@@ -1,17 +1,19 @@
-import { Card, CardContent } from '@/components/ui/card'
+import type { LucideIcon } from 'lucide-react'
 
 interface StatTileProps {
   label: string
   value: string | number
+  icon?: LucideIcon
 }
 
-export default function StatTile({ label, value }: StatTileProps) {
+export default function StatTile({ label, value, icon: Icon }: StatTileProps) {
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <p className="text-2xl font-semibold">{value}</p>
-        <p className="text-muted-foreground text-sm">{label}</p>
-      </CardContent>
-    </Card>
+    <div className="border-t-2 border-primary bg-card px-5 py-6">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-4xl font-bold tracking-tight text-foreground tabular-nums sm:text-5xl">{value}</p>
+        {Icon && <Icon className="mt-1 size-5 shrink-0 text-muted-foreground" />}
+      </div>
+      <p className="eyebrow mt-2">{label}</p>
+    </div>
   )
 }

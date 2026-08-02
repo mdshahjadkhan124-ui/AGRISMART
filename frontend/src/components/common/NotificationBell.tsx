@@ -20,39 +20,44 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <Button variant="outline" size="icon" onClick={() => setOpen((v) => !v)} className="relative">
-        <Bell className="size-4" />
+    <div className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setOpen((v) => !v)}
+        className="relative text-white/80 hover:bg-white/10 hover:text-white"
+      >
+        <Bell className="size-4.5" strokeWidth={1.75} />
         {unreadCount > 0 && (
-          <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px]">
+          <span className="bg-primary absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center text-[10px] font-semibold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </Button>
 
       {open && (
-        <Card className="mt-2 w-80 max-h-96 overflow-y-auto">
-          <CardHeader className="flex-row items-center justify-between">
-            <CardTitle className="text-base">Notifications</CardTitle>
+        <Card className="absolute top-full right-0 z-50 mt-3 max-h-96 w-80 overflow-y-auto">
+          <CardHeader className="flex-row items-center justify-between border-b border-border pb-4">
+            <CardTitle className="eyebrow">Notifications</CardTitle>
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => markAllRead.mutate()}>
+              <Button variant="ghost" size="sm" className="normal-case" onClick={() => markAllRead.mutate()}>
                 Mark all read
               </Button>
             )}
           </CardHeader>
-          <CardContent className="flex flex-col gap-1">
+          <CardContent className="flex flex-col divide-y divide-border px-0">
             {(!data || data.notifications.length === 0) && (
-              <p className="text-muted-foreground text-sm">No notifications yet.</p>
+              <p className="text-muted-foreground px-5 py-4 text-sm">No notifications yet.</p>
             )}
             {data?.notifications.map((notification) => (
               <Link
                 key={notification._id}
                 to={notification.link || '#'}
                 onClick={() => onOpenNotification(notification)}
-                className={`rounded-md p-2 text-sm ${notification.isRead ? '' : 'bg-accent'}`}
+                className={`px-5 py-3 text-sm transition-colors hover:bg-muted ${notification.isRead ? '' : 'bg-accent'}`}
               >
-                <p className="font-medium">{notification.title}</p>
-                <p className="text-muted-foreground">{notification.message}</p>
+                <p className="font-semibold text-foreground">{notification.title}</p>
+                <p className="text-muted-foreground mt-0.5">{notification.message}</p>
               </Link>
             ))}
           </CardContent>

@@ -1,75 +1,79 @@
 import { Link } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { logout } from '@/features/auth/authSlice'
+import { motion } from 'framer-motion'
+import {
+  Sprout,
+  User,
+  Leaf,
+  FlaskConical,
+  Bug,
+  Stethoscope,
+  CalendarClock,
+  Store,
+  Package,
+  Landmark,
+  BarChart3,
+} from 'lucide-react'
+import { useAppSelector } from '@/app/hooks'
+import { useMyAnalytics } from '@/features/analytics/hooks'
+import type { FarmerAnalytics } from '@/features/analytics/types'
 import { Button } from '@/components/ui/button'
-import type { Role } from '@/features/auth/types'
+import StatTile from '@/components/common/StatTile'
+import QuickActionCard from '@/components/common/QuickActionCard'
 
-const roleLabels: Record<Role, string> = {
-  farmer: 'Farmer',
-  expert: 'Agricultural Expert',
-  officer: 'Agricultural Officer',
-  seller: 'Marketplace Seller',
-  gov_admin: 'Government Administrator',
-  super_admin: 'Super Administrator',
+const farmerActions = [
+  { to: '/farms', title: 'My Farms', description: 'Manage your farm profiles and land records', icon: Sprout },
+  { to: '/profile', title: 'My Profile', description: 'Update your personal and contact details', icon: User },
+  {
+    to: '/crop-suggestion',
+    title: 'Crop Suggestion',
+    description: 'Get AI-backed crop recommendations for your soil',
+    icon: Leaf,
+  },
+  {
+    to: '/fertilizer-recommendation',
+    title: 'Fertilizer Recommendation',
+    description: 'Optimal fertilizer dosage for your crop',
+    icon: FlaskConical,
+  },
+  { to: '/disease-reports', title: 'Disease Reports', description: 'Report and track crop disease diagnoses', icon: Bug },
+  { to: '/experts', title: 'Find an Expert', description: 'Book a consultation with an agri expert', icon: Stethoscope },
+  {
+    to: '/appointments',
+    title: 'My Appointments',
+    description: 'View upcoming and past consultations',
+    icon: CalendarClock,
+  },
+  { to: '/marketplace', title: 'Marketplace', description: 'Browse seeds, tools and supplies', icon: Store },
+  { to: '/orders', title: 'My Orders', description: 'Track your marketplace purchases', icon: Package },
+  {
+    to: '/schemes',
+    title: 'Government Schemes',
+    description: 'Explore schemes you may be eligible for',
+    icon: Landmark,
+  },
+  { to: '/analytics', title: 'My Analytics', description: 'See trends across your farms and activity', icon: BarChart3 },
+]
+
+const listVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.05 } },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0 },
 }
 
 export default function DashboardPage() {
-  const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
 
   if (!user) return null
 
-  return (
-    <div className="mx-auto flex min-h-svh max-w-2xl flex-col gap-6 p-8">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Welcome, {user.name}</h1>
-          <p className="text-muted-foreground">
-            Signed in as <span className="font-medium">{roleLabels[user.role]}</span>
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => dispatch(logout())}>
-          Log out
-        </Button>
-      </div>
+  if (user.role === 'farmer') return <FarmerDashboard name={user.name} />
 
-      {user.role === 'farmer' && (
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link to="/farms">My Farms</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/profile">My Profile</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/crop-suggestion">Crop Suggestion</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/fertilizer-recommendation">Fertilizer Recommendation</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/disease-reports">Disease Reports</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/experts">Find an Expert</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/appointments">My Appointments</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/marketplace">Marketplace</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/orders">My Orders</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/schemes">Government Schemes</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/analytics">My Analytics</Link>
-          </Button>
-        </div>
-      )}
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
+      <h1 className="text-2xl font-semibold">Quick links</h1>
 
       {user.role === 'expert' && (
         <div className="flex flex-wrap gap-3">
@@ -134,6 +138,51 @@ export default function DashboardPage() {
           </Button>
         </div>
       )}
+    </div>
+  )
+}
+
+function FarmerDashboard({ name }: { name: string }) {
+  const { data: analytics, isLoading } = useMyAnalytics()
+  const stats = analytics?.data as FarmerAnalytics | undefined
+  const firstName = name.split(' ')[0]
+
+  return (
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 p-6 sm:p-8">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+          Welcome back, {firstName}
+        </h1>
+        <p className="text-muted-foreground mt-1">Here's what's happening across your farms today.</p>
+      </motion.div>
+
+      <motion.div className="grid grid-cols-1 gap-4 sm:grid-cols-3" variants={listVariants} initial="hidden" animate="show">
+        <motion.div variants={itemVariants}>
+          <StatTile label="Farms" value={isLoading ? '—' : (stats?.farmCount ?? 0)} icon={Sprout} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatTile label="Orders" value={isLoading ? '—' : (stats?.ordersCount ?? 0)} icon={Package} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatTile label="Appointments" value={isLoading ? '—' : (stats?.appointmentsCount ?? 0)} icon={CalendarClock} />
+        </motion.div>
+      </motion.div>
+
+      <div>
+        <h2 className="text-foreground mb-3 text-lg font-semibold">Quick actions</h2>
+        <motion.div
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          variants={listVariants}
+          initial="hidden"
+          animate="show"
+        >
+          {farmerActions.map((action) => (
+            <motion.div key={action.to + action.title} variants={itemVariants}>
+              <QuickActionCard {...action} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
     </div>
   )
 }

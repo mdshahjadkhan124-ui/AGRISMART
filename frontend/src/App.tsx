@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import AppRouter from '@/routes/AppRouter'
 import { useAppDispatch, useAppSelector } from '@/app/hooks'
 import { bootstrapSession } from '@/features/auth/authSlice'
-import NotificationBell from '@/components/common/NotificationBell'
 import ChatbotWidget from '@/components/common/ChatbotWidget'
 
 function App() {
@@ -16,12 +15,7 @@ function App() {
   return (
     <>
       <AppRouter />
-      {isAuthenticated && (
-        <>
-          <NotificationBell />
-          <ChatbotWidget />
-        </>
-      )}
+      {isAuthenticated && <ChatbotWidget />}
     </>
   )
 }
