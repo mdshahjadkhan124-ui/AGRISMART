@@ -48,6 +48,14 @@ export const register = createAsyncThunk(
   }
 )
 
+export const googleLogin = createAsyncThunk('auth/googleLogin', async (idToken: string, { rejectWithValue }) => {
+  try {
+    return await authApi.googleLoginRequest(idToken)
+  } catch (err) {
+    return rejectWithValue(extractErrorMessage(err))
+  }
+})
+
 // Silently re-establishes a session on app load using the httpOnly refresh
 // cookie. Rejecting here just means "not logged in" — never surfaced as an
 // error to the user.
@@ -105,6 +113,16 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, onAuthSucceeded)
       .addCase(register.rejected, (state, action) => {
+        state.status = 'unauthenticated'
+        state.error = action.payload as string
+      })
+
+      .addCase(googleLogin.pending, (state) => {
+        state.status = 'loading'
+        state.error = null
+      })
+      .addCase(googleLogin.fulfilled, onAuthSucceeded)
+      .addCase(googleLogin.rejected, (state, action) => {
         state.status = 'unauthenticated'
         state.error = action.payload as string
       })

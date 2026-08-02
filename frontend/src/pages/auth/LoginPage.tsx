@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import SiteHeader from '@/components/layout/SiteHeader'
+import GoogleSignInButton from '@/features/auth/GoogleSignInButton'
 
 const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address'),
@@ -87,6 +88,14 @@ export default function LoginPage() {
                 {status === 'loading' ? 'Signing in…' : 'Sign in'}
               </Button>
             </form>
+
+            <div className="my-6 flex items-center gap-4">
+              <div className="border-border h-px flex-1 border-t" />
+              <span className="eyebrow">Or</span>
+              <div className="border-border h-px flex-1 border-t" />
+            </div>
+
+            <GoogleSignInButton />
 
             <p className="text-muted-foreground mt-6 text-sm">
               No account?{' '}

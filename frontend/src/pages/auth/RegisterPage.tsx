@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import GoogleSignInButton from '@/features/auth/GoogleSignInButton'
 
 const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters'),
@@ -78,6 +79,15 @@ export default function RegisterPage() {
               {status === 'loading' ? 'Creating account…' : 'Create account'}
             </Button>
           </form>
+
+          <div className="my-4 flex items-center gap-3">
+            <div className="border-border h-px flex-1 border-t" />
+            <span className="text-muted-foreground text-xs">Or</span>
+            <div className="border-border h-px flex-1 border-t" />
+          </div>
+
+          <GoogleSignInButton />
+
           <p className="text-muted-foreground mt-4 text-center text-sm">
             Already have an account?{' '}
             <Link to="/login" className="text-primary underline-offset-4 hover:underline">

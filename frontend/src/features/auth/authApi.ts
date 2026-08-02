@@ -22,6 +22,11 @@ export async function registerRequest(payload: {
   return res.data.data
 }
 
+export async function googleLoginRequest(idToken: string) {
+  const res = await api.post<ApiEnvelope<AuthResponseData>>('/auth/google', { idToken })
+  return res.data.data
+}
+
 export async function logoutRequest() {
   await api.post('/auth/logout')
 }
