@@ -3,7 +3,6 @@ const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const authService = require('../services/auth.service');
 const googleAuthService = require('../services/googleAuth.service');
-const otpService = require('../services/otp.service');
 const User = require('../models/User.model');
 const { setRefreshCookie, clearRefreshCookie, REFRESH_COOKIE_NAME } = require('../utils/cookies');
 
@@ -49,15 +48,4 @@ const googleLogin = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, { user: user.toSafeJSON(), accessToken }, 'Logged in with Google'));
 });
 
-const requestOtp = asyncHandler(async (req, res) => {
-  await otpService.requestOtp(req.body.phone);
-  res.status(200).json(new ApiResponse(200, null, 'OTP sent'));
-});
-
-const verifyOtp = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } = await otpService.verifyOtp(req.body.phone, req.body.code, requestMeta(req));
-  setRefreshCookie(res, refreshToken);
-  res.status(200).json(new ApiResponse(200, { user: user.toSafeJSON(), accessToken }, 'Logged in'));
-});
-
-module.exports = { register, login, refresh, logout, me, googleLogin, requestOtp, verifyOtp };
+module.exports = { register, login, refresh, logout, me, googleLogin };

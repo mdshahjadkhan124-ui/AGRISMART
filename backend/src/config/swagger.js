@@ -15,7 +15,7 @@ const swaggerSpec = swaggerJsdoc({
     servers: [{ url: `http://localhost:${env.port}/api/v1` }],
     tags: [
       { name: 'Health', description: 'Service and database status' },
-      { name: 'Auth', description: 'Registration, login, session refresh, Google OAuth and OTP (config-gated)' },
+      { name: 'Auth', description: 'Registration, login, session refresh, and Google OAuth (config-gated)' },
       { name: 'Farmer Profile', description: "A farmer's own profile" },
       { name: 'Farms', description: 'Farm CRUD and nested crop history / soil reports / activity diary' },
       { name: 'Weather', description: 'OpenWeather current conditions and forecast (config-gated)' },

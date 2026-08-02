@@ -3,13 +3,7 @@ const controller = require('../controllers/auth.controller');
 const validate = require('../middleware/validate');
 const authenticate = require('../middleware/authenticate');
 const { authLimiter } = require('../middleware/rateLimiters');
-const {
-  registerSchema,
-  loginSchema,
-  googleLoginSchema,
-  otpRequestSchema,
-  otpVerifySchema,
-} = require('../validators/auth.validator');
+const { registerSchema, loginSchema, googleLoginSchema } = require('../validators/auth.validator');
 
 const router = Router();
 
@@ -123,50 +117,5 @@ router.get('/me', authenticate, controller.me);
  *       501: { description: Google OAuth not configured (GOOGLE_CLIENT_ID missing) }
  */
 router.post('/google', validate(googleLoginSchema), controller.googleLogin);
-
-/**
- * @openapi
- * /auth/otp/request:
- *   post:
- *     tags: [Auth]
- *     summary: Send an SMS OTP to a phone number
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [phone]
- *             properties: { phone: { type: string } }
- *     responses:
- *       200: { description: OTP sent }
- *       501: { description: OTP login not configured (TWILIO_* missing) }
- */
-router.post('/otp/request', validate(otpRequestSchema), controller.requestOtp);
-
-/**
- * @openapi
- * /auth/otp/verify:
- *   post:
- *     tags: [Auth]
- *     summary: Verify an OTP and log in (creates the account on first verification)
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [phone, code]
- *             properties:
- *               phone: { type: string }
- *               code: { type: string }
- *     responses:
- *       200: { description: Logged in }
- *       401: { description: Invalid or expired OTP }
- *       501: { description: OTP login not configured (TWILIO_* missing) }
- */
-router.post('/otp/verify', validate(otpVerifySchema), controller.verifyOtp);
 
 module.exports = router;

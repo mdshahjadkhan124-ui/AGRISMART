@@ -72,7 +72,7 @@ npm run dev              # http://localhost:5173
 
 ### Environment variables
 
-Every third-party integration (Google OAuth, Twilio OTP, Cloudinary, OpenWeather) is **config-gated**: the app runs and boots fine without any of them configured, and the specific endpoints that need them return `501 Not Configured` with a message telling you which `.env` variable to set. Only `MONGO_URI`, `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET` are required to boot. See `backend/.env.example` and `frontend/.env.example` for the full list.
+Every third-party integration (Google OAuth, Cloudinary, OpenWeather) is **config-gated**: the app runs and boots fine without any of them configured, and the specific endpoints that need them return `501 Not Configured` with a message telling you which `.env` variable to set. Only `MONGO_URI`, `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET` are required to boot. See `backend/.env.example` and `frontend/.env.example` for the full list.
 
 ### Running tests
 

@@ -22,13 +22,4 @@ const googleLoginSchema = z.object({
   idToken: z.string().min(1, 'idToken is required'),
 });
 
-const otpRequestSchema = z.object({
-  phone: z.string().trim().min(7).max(20),
-});
-
-const otpVerifySchema = z.object({
-  phone: z.string().trim().min(7).max(20),
-  code: z.string().trim().min(4).max(10),
-});
-
-module.exports = { registerSchema, loginSchema, googleLoginSchema, otpRequestSchema, otpVerifySchema };
+module.exports = { registerSchema, loginSchema, googleLoginSchema };
