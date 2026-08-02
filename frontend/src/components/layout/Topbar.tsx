@@ -32,7 +32,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
       <div className="flex-1" />
 
-      <NotificationBell />
+      <NotificationBell triggerClassName="text-foreground" />
 
       <div className="bg-border mx-1 hidden h-6 w-px sm:block" />
 

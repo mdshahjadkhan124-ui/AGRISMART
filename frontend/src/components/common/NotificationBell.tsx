@@ -4,9 +4,17 @@ import { Bell } from 'lucide-react'
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useNotifications } from '@/features/notifications/hooks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import type { AppNotification } from '@/features/notifications/types'
 
-export default function NotificationBell() {
+interface NotificationBellProps {
+  /** Trigger button color classes — the bell sits on different-colored bars
+   * (dark SiteHeader vs light Topbar), so callers must supply contrast-appropriate
+   * classes rather than this component assuming one background. */
+  triggerClassName?: string
+}
+
+export default function NotificationBell({ triggerClassName }: NotificationBellProps) {
   const [open, setOpen] = useState(false)
   const { data } = useNotifications()
   const markRead = useMarkNotificationRead()
@@ -25,7 +33,7 @@ export default function NotificationBell() {
         variant="ghost"
         size="icon"
         onClick={() => setOpen((v) => !v)}
-        className="relative text-white/80 hover:bg-white/10 hover:text-white"
+        className={cn('relative', triggerClassName)}
       >
         <Bell className="size-4.5" strokeWidth={1.75} />
         {unreadCount > 0 && (

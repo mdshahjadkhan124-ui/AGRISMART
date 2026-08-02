@@ -67,7 +67,7 @@ export default function SiteHeader() {
                 </Link>
               </Button>
             )}
-            <NotificationBell />
+            <NotificationBell triggerClassName="text-white/80 hover:bg-white/10 hover:text-white" />
             <div className="mx-2 hidden h-6 w-px bg-white/15 sm:block" />
             <div className="hidden items-center gap-3 sm:flex">
               <div className="flex flex-col items-end leading-tight">

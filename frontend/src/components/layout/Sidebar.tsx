@@ -20,7 +20,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
         <span className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
           <Sprout className="size-4.5" />
         </span>
-        <span className="text-foreground text-lg font-semibold tracking-tight">AgriSmart</span>
+        <span className="text-sidebar-foreground text-lg font-semibold tracking-tight">AgriSmart</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-2">
