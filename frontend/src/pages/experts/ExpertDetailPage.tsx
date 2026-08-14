@@ -41,7 +41,7 @@ export default function ExpertDetailPage() {
 
   const onSubmit = (values: BookingValues) => {
     bookAppointment.mutate(
-      { expertId: expert._id, requestedDate: new Date(values.requestedDate).toISOString(), reason: values.reason, meetingType: values.meetingType },
+      { expertId: expert.user._id, requestedDate: new Date(values.requestedDate).toISOString(), reason: values.reason, meetingType: values.meetingType },
       { onSuccess: () => setBooked(true) }
     )
   }
