@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 
 const meetingTypes = ['chat', 'audio', 'video'] as const
 
@@ -48,12 +49,14 @@ export default function ExpertDetailPage() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6 p-8">
-      <div>
+      <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">{expert.user.name}</h1>
         <p className="text-muted-foreground text-sm">
           {expert.specialization || 'General agricultural expert'} · {expert.experienceYears} yrs experience
-          {expert.consultationFeeInr > 0 && <> · ₹{expert.consultationFeeInr}/session</>}
         </p>
+        <Badge variant="secondary" className="w-fit">
+          Free · Government subsidized
+        </Badge>
       </div>
 
       {expert.bio && (
@@ -73,6 +76,9 @@ export default function ExpertDetailPage() {
             </p>
           ) : (
             <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+              <p className="text-muted-foreground text-xs">
+                This consultation is free for farmers under AgriSmart's government-supported advisory program.
+              </p>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="requestedDate">Preferred date & time</Label>
                 <Input id="requestedDate" type="datetime-local" {...register('requestedDate')} />

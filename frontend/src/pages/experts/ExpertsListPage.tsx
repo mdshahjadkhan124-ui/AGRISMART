@@ -28,9 +28,13 @@ export default function ExpertsListPage() {
                   <Badge variant="secondary">Unavailable</Badge>
                 )}
               </CardHeader>
-              <CardContent className="text-muted-foreground text-sm">
-                {expert.specialization || 'General agricultural expert'} · {expert.experienceYears} yrs experience
-                {expert.consultationFeeInr > 0 && <> · ₹{expert.consultationFeeInr}/session</>}
+              <CardContent className="flex flex-col gap-2">
+                <p className="text-muted-foreground text-sm">
+                  {expert.specialization || 'General agricultural expert'} · {expert.experienceYears} yrs experience
+                </p>
+                <Badge variant="secondary" className="w-fit">
+                  Free · Government subsidized
+                </Badge>
               </CardContent>
             </Card>
           </Link>
