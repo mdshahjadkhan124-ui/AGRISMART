@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Farm = require('../models/Farm.model');
 const SoilReport = require('../models/SoilReport.model');
 const DiseaseReport = require('../models/DiseaseReport.model');
@@ -33,7 +34,10 @@ async function getFarmerAnalytics(userId) {
   const [farmCount, soilReports, diseaseStatusAgg, ordersCount, appointmentsCount] = await Promise.all([
     Farm.countDocuments({ farmer: userId }),
     SoilReport.find({ farm: { $in: farmIds } }).sort({ testedAt: 1 }).select('testedAt healthScore').limit(20),
-    DiseaseReport.aggregate([{ $match: { farmer: userId } }, { $group: { _id: '$status', count: { $sum: 1 } } }]),
+    DiseaseReport.aggregate([
+      { $match: { farmer: new mongoose.Types.ObjectId(userId) } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
     Order.countDocuments({ buyer: userId }),
     Appointment.countDocuments({ farmer: userId }),
   ]);
@@ -49,7 +53,10 @@ async function getFarmerAnalytics(userId) {
 
 async function getExpertAnalytics(userId) {
   const [appointmentStatusAgg, diseaseReportsResolved] = await Promise.all([
-    Appointment.aggregate([{ $match: { expert: userId } }, { $group: { _id: '$status', count: { $sum: 1 } } }]),
+    Appointment.aggregate([
+      { $match: { expert: new mongoose.Types.ObjectId(userId) } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
     DiseaseReport.countDocuments({ expert: userId, status: 'resolved' }),
   ]);
 
@@ -62,8 +69,11 @@ async function getExpertAnalytics(userId) {
 async function getSellerAnalytics(userId) {
   const [productCount, orderStatusAgg, totalRevenueInr] = await Promise.all([
     MarketplaceProduct.countDocuments({ seller: userId }),
-    Order.aggregate([{ $match: { seller: userId } }, { $group: { _id: '$status', count: { $sum: 1 } } }]),
-    sumDeliveredRevenue({ seller: userId }),
+    Order.aggregate([
+      { $match: { seller: new mongoose.Types.ObjectId(userId) } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
+    sumDeliveredRevenue({ seller: new mongoose.Types.ObjectId(userId) }),
   ]);
 
   return {
