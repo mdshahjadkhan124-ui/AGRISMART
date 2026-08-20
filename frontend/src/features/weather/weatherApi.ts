@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { CurrentWeather, Forecast } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,12 +7,22 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function getCurrentWeather(lat: number, lon: number) {
-  const res = await api.get<ApiEnvelope<{ weather: CurrentWeather }>>('/weather/current', { params: { lat, lon } })
-  return res.data.data.weather
+interface Coords {
+  lat: number
+  lon: number
 }
 
-export async function getForecast(lat: number, lon: number) {
-  const res = await api.get<ApiEnvelope<{ forecast: Forecast }>>('/weather/forecast', { params: { lat, lon } })
-  return res.data.data.forecast
-}
+export const weatherApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getCurrentWeather: builder.query<CurrentWeather, Coords>({
+      query: ({ lat, lon }) => ({ url: '/weather/current', params: { lat, lon } }),
+      transformResponse: (res: ApiEnvelope<{ weather: CurrentWeather }>) => res.data.weather,
+    }),
+    getForecast: builder.query<Forecast, Coords>({
+      query: ({ lat, lon }) => ({ url: '/weather/forecast', params: { lat, lon } }),
+      transformResponse: (res: ApiEnvelope<{ forecast: Forecast }>) => res.data.forecast,
+    }),
+  }),
+})
+
+export const { useGetCurrentWeatherQuery, useGetForecastQuery } = weatherApi

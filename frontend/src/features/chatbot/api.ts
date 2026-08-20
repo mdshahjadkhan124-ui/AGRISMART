@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 
 interface ApiEnvelope<T> {
   success: boolean
@@ -12,7 +12,13 @@ export interface ChatbotResult {
   answer: string
 }
 
-export async function queryChatbot(message: string, lang: 'en' | 'hi') {
-  const res = await api.post<ApiEnvelope<ChatbotResult>>('/chatbot/query', { message, lang })
-  return res.data.data
-}
+export const chatbotApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    queryChatbot: builder.mutation<ChatbotResult, { message: string; lang: 'en' | 'hi' }>({
+      query: ({ message, lang }) => ({ url: '/chatbot/query', method: 'POST', body: { message, lang } }),
+      transformResponse: (res: ApiEnvelope<ChatbotResult>) => res.data,
+    }),
+  }),
+})
+
+export const { useQueryChatbotMutation } = chatbotApi

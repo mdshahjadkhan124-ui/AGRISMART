@@ -1,52 +1,46 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAppDispatch } from '@/app/hooks'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
 import { getSocket } from '@/lib/socket'
-import * as api from './api'
+import {
+  appointmentsApi,
+  useBookAppointmentMutation,
+  useGetMyAppointmentsQuery,
+  useGetAppointmentQuery,
+  useUpdateAppointmentStatusMutation,
+  useGetMessagesQuery,
+  useSendMessageMutation,
+  useGetCallInfoQuery,
+} from './api'
 import type { ChatMessage } from './types'
 
 export function useMyAppointments() {
-  return useQuery({ queryKey: ['appointments'], queryFn: api.listMyAppointments })
+  return useGetMyAppointmentsQuery()
 }
 
 export function useAppointment(id: string) {
-  return useQuery({ queryKey: ['appointments', id], queryFn: () => api.getAppointment(id), enabled: Boolean(id) })
+  return useGetAppointmentQuery(id, { skip: !id })
 }
 
 export function useBookAppointment() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.bookAppointment,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
-  })
+  return useMutationCompat(useBookAppointmentMutation())
 }
 
 export function useUpdateAppointmentStatus(id: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ status, expertNotes }: { status: string; expertNotes?: string }) =>
-      api.updateAppointmentStatus(id, status, expertNotes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      queryClient.invalidateQueries({ queryKey: ['appointments', id] })
-    },
-  })
+  const [trigger, state] = useUpdateAppointmentStatusMutation()
+  return useMutationCompat([
+    (arg: { status: string; expertNotes?: string }) => trigger({ id, ...arg }),
+    state,
+  ])
 }
-
-const messagesKey = (appointmentId: string) => ['appointments', appointmentId, 'messages']
 
 // Joins the appointment's chat room over the socket (server re-checks
 // ownership on every join) and appends messages pushed in real time.
 // Falls back to a slow poll in case the socket isn't connected — the REST
 // endpoint stays the source of truth either way.
 export function useMessages(appointmentId: string) {
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: messagesKey(appointmentId),
-    queryFn: () => api.listMessages(appointmentId),
-    enabled: Boolean(appointmentId),
-    refetchInterval: 15000,
-  })
+  const dispatch = useAppDispatch()
+  const query = useGetMessagesQuery(appointmentId, { skip: !appointmentId, pollingInterval: 15000 })
 
   useEffect(() => {
     if (!appointmentId) return
@@ -57,32 +51,31 @@ export function useMessages(appointmentId: string) {
 
     const onMessage = (message: ChatMessage) => {
       if (message.appointment !== appointmentId) return
-      queryClient.setQueryData<ChatMessage[] | undefined>(messagesKey(appointmentId), (current) => {
-        if (!current) return current
-        if (current.some((m) => m._id === message._id)) return current
-        return [...current, message]
-      })
+      dispatch(
+        appointmentsApi.util.updateQueryData('getMessages', appointmentId, (current) => {
+          if (current.some((m) => m._id === message._id)) return
+          current.push(message)
+        })
+      )
     }
 
     socket.on('chat:message', onMessage)
     return () => {
       socket.off('chat:message', onMessage)
     }
-  }, [appointmentId, queryClient])
+  }, [appointmentId, dispatch])
 
   return query
 }
 
 export function useSendMessage(appointmentId: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (text: string) => api.sendMessage(appointmentId, text),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: messagesKey(appointmentId) }),
-  })
+  const [trigger, state] = useSendMessageMutation()
+  return useMutationCompat([(text: string) => trigger({ appointmentId, text }), state])
 }
 
 // Lightweight typing indicator: emits while the user types (throttled) and
-// tracks whether the other participant is currently typing.
+// tracks whether the other participant is currently typing. Pure socket
+// traffic — no REST call, so it stays outside RTK Query entirely.
 export function useTypingIndicator(appointmentId: string) {
   const [otherTyping, setOtherTyping] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -117,9 +110,5 @@ export function useTypingIndicator(appointmentId: string) {
 }
 
 export function useCallInfo(appointmentId: string) {
-  return useQuery({
-    queryKey: ['appointments', appointmentId, 'call'],
-    queryFn: () => api.getCallInfo(appointmentId),
-    enabled: Boolean(appointmentId),
-  })
+  return useGetCallInfoQuery(appointmentId, { skip: !appointmentId })
 }

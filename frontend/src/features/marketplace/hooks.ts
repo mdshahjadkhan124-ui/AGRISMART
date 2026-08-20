@@ -1,39 +1,35 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as api from './api'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
+import {
+  useGetPublicProductsQuery,
+  useGetProductQuery,
+  useGetMyProductsQuery,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+} from './api'
 import type { ProductInput } from './types'
 
 export function usePublicProducts(params: { category?: string; search?: string } = {}) {
-  return useQuery({ queryKey: ['marketplace-products', params], queryFn: () => api.listPublicProducts(params) })
+  return useGetPublicProductsQuery(params)
 }
 
 export function useProduct(id: string) {
-  return useQuery({ queryKey: ['marketplace-products', id], queryFn: () => api.getProduct(id), enabled: Boolean(id) })
+  return useGetProductQuery(id, { skip: !id })
 }
 
 export function useMyProducts() {
-  return useQuery({ queryKey: ['marketplace-products', 'mine'], queryFn: api.listMyProducts })
+  return useGetMyProductsQuery()
 }
 
 export function useCreateProduct() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.createProduct,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace-products'] }),
-  })
+  return useMutationCompat(useCreateProductMutation())
 }
 
 export function useUpdateProduct(id: string) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (input: Partial<ProductInput>) => api.updateProduct(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace-products'] }),
-  })
+  const [trigger, state] = useUpdateProductMutation()
+  return useMutationCompat([(input: Partial<ProductInput>) => trigger({ id, input }), state])
 }
 
 export function useDeleteProduct() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.deleteProduct,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['marketplace-products'] }),
-  })
+  return useMutationCompat(useDeleteProductMutation())
 }

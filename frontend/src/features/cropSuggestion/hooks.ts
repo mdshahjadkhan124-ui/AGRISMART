@@ -1,14 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as api from './api'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
+import { useGetCropSuggestionsQuery, useCreateCropSuggestionMutation } from './api'
 
 export function useCropSuggestionHistory() {
-  return useQuery({ queryKey: ['crop-suggestions'], queryFn: api.listCropSuggestionHistory })
+  return useGetCropSuggestionsQuery()
 }
 
 export function useCreateCropSuggestion() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.createCropSuggestion,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crop-suggestions'] }),
-  })
+  return useMutationCompat(useCreateCropSuggestionMutation())
 }

@@ -1,27 +1,22 @@
-import { useQuery } from '@tanstack/react-query'
-import { isAxiosError } from 'axios'
-import * as weatherApi from './weatherApi'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
+import { useGetCurrentWeatherQuery, useGetForecastQuery } from './weatherApi'
 
 function isNotConfigured(err: unknown) {
-  return isAxiosError(err) && err.response?.status === 501
+  return Boolean(err && typeof err === 'object' && 'status' in err && (err as FetchBaseQueryError).status === 501)
 }
 
 export function useCurrentWeather(lat?: number, lon?: number) {
-  const query = useQuery({
-    queryKey: ['weather', 'current', lat, lon],
-    queryFn: () => weatherApi.getCurrentWeather(lat as number, lon as number),
-    enabled: lat != null && lon != null,
-    retry: false,
-  })
+  const query = useGetCurrentWeatherQuery(
+    { lat: lat ?? 0, lon: lon ?? 0 },
+    { skip: lat == null || lon == null }
+  )
   return { ...query, notConfigured: isNotConfigured(query.error) }
 }
 
 export function useForecast(lat?: number, lon?: number) {
-  const query = useQuery({
-    queryKey: ['weather', 'forecast', lat, lon],
-    queryFn: () => weatherApi.getForecast(lat as number, lon as number),
-    enabled: lat != null && lon != null,
-    retry: false,
-  })
+  const query = useGetForecastQuery(
+    { lat: lat ?? 0, lon: lon ?? 0 },
+    { skip: lat == null || lon == null }
+  )
   return { ...query, notConfigured: isNotConfigured(query.error) }
 }

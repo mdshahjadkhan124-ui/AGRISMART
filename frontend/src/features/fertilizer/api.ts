@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { FertilizerInput, FertilizerRecommendationRecord } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,17 +7,19 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function createFertilizerRecommendation(input: FertilizerInput) {
-  const res = await api.post<ApiEnvelope<{ recommendation: FertilizerRecommendationRecord }>>(
-    '/fertilizer-recommendations',
-    input
-  )
-  return res.data.data.recommendation
-}
+export const fertilizerApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getFertilizerHistory: builder.query<FertilizerRecommendationRecord[], void>({
+      query: () => '/fertilizer-recommendations',
+      transformResponse: (res: ApiEnvelope<{ recommendations: FertilizerRecommendationRecord[] }>) => res.data.recommendations,
+      providesTags: ['FertilizerRec'],
+    }),
+    createFertilizerRecommendation: builder.mutation<FertilizerRecommendationRecord, FertilizerInput>({
+      query: (input) => ({ url: '/fertilizer-recommendations', method: 'POST', body: input }),
+      transformResponse: (res: ApiEnvelope<{ recommendation: FertilizerRecommendationRecord }>) => res.data.recommendation,
+      invalidatesTags: ['FertilizerRec'],
+    }),
+  }),
+})
 
-export async function listFertilizerHistory() {
-  const res = await api.get<ApiEnvelope<{ recommendations: FertilizerRecommendationRecord[] }>>(
-    '/fertilizer-recommendations'
-  )
-  return res.data.data.recommendations
-}
+export const { useGetFertilizerHistoryQuery, useCreateFertilizerRecommendationMutation } = fertilizerApi

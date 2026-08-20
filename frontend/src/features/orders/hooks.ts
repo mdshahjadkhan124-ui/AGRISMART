@@ -1,30 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as api from './api'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
+import {
+  useCreateOrderMutation,
+  useGetMyOrdersQuery,
+  useGetMyOrderQuery,
+  useGetSellerOrdersQuery,
+  useUpdateOrderStatusMutation,
+} from './api'
 
 export function useMyOrders() {
-  return useQuery({ queryKey: ['orders', 'mine'], queryFn: api.listMyOrders })
+  return useGetMyOrdersQuery()
 }
 
 export function useMyOrder(id: string) {
-  return useQuery({ queryKey: ['orders', 'mine', id], queryFn: () => api.getMyOrder(id), enabled: Boolean(id) })
+  return useGetMyOrderQuery(id, { skip: !id })
 }
 
 export function useCreateOrder() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.createOrder,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders', 'mine'] }),
-  })
+  return useMutationCompat(useCreateOrderMutation())
 }
 
 export function useSellerOrders() {
-  return useQuery({ queryKey: ['orders', 'seller'], queryFn: api.listSellerOrders })
+  return useGetSellerOrdersQuery()
 }
 
 export function useUpdateOrderStatus() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => api.updateOrderStatus(id, status),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders', 'seller'] }),
-  })
+  const [trigger, state] = useUpdateOrderStatusMutation()
+  return useMutationCompat([(arg: { id: string; status: string }) => trigger(arg), state])
 }

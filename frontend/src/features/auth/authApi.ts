@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { AuthResponseData, User } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,36 +7,39 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function loginRequest(payload: { email: string; password: string }) {
-  const res = await api.post<ApiEnvelope<AuthResponseData>>('/auth/login', payload)
-  return res.data.data
-}
+export const authApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    login: builder.mutation<AuthResponseData, { email: string; password: string }>({
+      query: (payload) => ({ url: '/auth/login', method: 'POST', body: payload }),
+      transformResponse: (res: ApiEnvelope<AuthResponseData>) => res.data,
+    }),
+    register: builder.mutation<AuthResponseData, { name: string; email: string; password: string; phone?: string }>({
+      query: (payload) => ({ url: '/auth/register', method: 'POST', body: payload }),
+      transformResponse: (res: ApiEnvelope<AuthResponseData>) => res.data,
+    }),
+    googleLogin: builder.mutation<AuthResponseData, string>({
+      query: (idToken) => ({ url: '/auth/google', method: 'POST', body: { idToken } }),
+      transformResponse: (res: ApiEnvelope<AuthResponseData>) => res.data,
+    }),
+    refresh: builder.mutation<AuthResponseData, void>({
+      query: () => ({ url: '/auth/refresh', method: 'POST' }),
+      transformResponse: (res: ApiEnvelope<AuthResponseData>) => res.data,
+    }),
+    logout: builder.mutation<void, void>({
+      query: () => ({ url: '/auth/logout', method: 'POST' }),
+    }),
+    getMe: builder.query<User, void>({
+      query: () => '/auth/me',
+      transformResponse: (res: ApiEnvelope<{ user: User }>) => res.data.user,
+    }),
+  }),
+})
 
-export async function registerRequest(payload: {
-  name: string
-  email: string
-  password: string
-  phone?: string
-}) {
-  const res = await api.post<ApiEnvelope<AuthResponseData>>('/auth/register', payload)
-  return res.data.data
-}
-
-export async function googleLoginRequest(idToken: string) {
-  const res = await api.post<ApiEnvelope<AuthResponseData>>('/auth/google', { idToken })
-  return res.data.data
-}
-
-export async function logoutRequest() {
-  await api.post('/auth/logout')
-}
-
-export async function fetchMeRequest() {
-  const res = await api.get<ApiEnvelope<{ user: User }>>('/auth/me')
-  return res.data.data.user
-}
-
-export async function refreshRequest() {
-  const res = await api.post<ApiEnvelope<AuthResponseData>>('/auth/refresh')
-  return res.data.data
-}
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useGoogleLoginMutation,
+  useRefreshMutation,
+  useLogoutMutation,
+  useGetMeQuery,
+} = authApi

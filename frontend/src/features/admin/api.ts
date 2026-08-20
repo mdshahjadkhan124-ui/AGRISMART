@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { AdminUser, AuditLogEntry } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,22 +7,34 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function listUsers(params: { role?: string; search?: string } = {}) {
-  const res = await api.get<ApiEnvelope<{ users: AdminUser[] }>>('/admin/users', { params })
-  return res.data.data.users
-}
+export const adminApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getAdminUsers: builder.query<AdminUser[], { role?: string; search?: string } | void>({
+      query: (params) => ({ url: '/admin/users', params: params ?? {} }),
+      transformResponse: (res: ApiEnvelope<{ users: AdminUser[] }>) => res.data.users,
+      providesTags: [{ type: 'AdminUser', id: 'LIST' }],
+    }),
+    updateUserRole: builder.mutation<AdminUser, { id: string; role: string }>({
+      query: ({ id, role }) => ({ url: `/admin/users/${id}/role`, method: 'PUT', body: { role } }),
+      transformResponse: (res: ApiEnvelope<{ user: AdminUser }>) => res.data.user,
+      invalidatesTags: [{ type: 'AdminUser', id: 'LIST' }],
+    }),
+    updateUserStatus: builder.mutation<AdminUser, { id: string; isActive: boolean }>({
+      query: ({ id, isActive }) => ({ url: `/admin/users/${id}/status`, method: 'PUT', body: { isActive } }),
+      transformResponse: (res: ApiEnvelope<{ user: AdminUser }>) => res.data.user,
+      invalidatesTags: [{ type: 'AdminUser', id: 'LIST' }],
+    }),
+    getAuditLogs: builder.query<AuditLogEntry[], void>({
+      query: () => '/admin/audit-logs',
+      transformResponse: (res: ApiEnvelope<{ auditLogs: AuditLogEntry[] }>) => res.data.auditLogs,
+      providesTags: ['AuditLog'],
+    }),
+  }),
+})
 
-export async function updateUserRole(id: string, role: string) {
-  const res = await api.put<ApiEnvelope<{ user: AdminUser }>>(`/admin/users/${id}/role`, { role })
-  return res.data.data.user
-}
-
-export async function updateUserStatus(id: string, isActive: boolean) {
-  const res = await api.put<ApiEnvelope<{ user: AdminUser }>>(`/admin/users/${id}/status`, { isActive })
-  return res.data.data.user
-}
-
-export async function listAuditLogs() {
-  const res = await api.get<ApiEnvelope<{ auditLogs: AuditLogEntry[] }>>('/admin/audit-logs')
-  return res.data.data.auditLogs
-}
+export const {
+  useGetAdminUsersQuery,
+  useUpdateUserRoleMutation,
+  useUpdateUserStatusMutation,
+  useGetAuditLogsQuery,
+} = adminApi

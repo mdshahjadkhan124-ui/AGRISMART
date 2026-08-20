@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { AppNotification } from './types'
 
 interface ApiEnvelope<T> {
@@ -8,15 +8,31 @@ interface ApiEnvelope<T> {
   meta?: { unreadCount: number }
 }
 
-export async function listNotifications() {
-  const res = await api.get<ApiEnvelope<{ notifications: AppNotification[] }>>('/notifications')
-  return { notifications: res.data.data.notifications, unreadCount: res.data.meta?.unreadCount ?? 0 }
+export interface NotificationsResult {
+  notifications: AppNotification[]
+  unreadCount: number
 }
 
-export async function markAsRead(id: string) {
-  await api.put(`/notifications/${id}/read`)
-}
+export const notificationsApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getNotifications: builder.query<NotificationsResult, void>({
+      query: () => '/notifications',
+      transformResponse: (res: ApiEnvelope<{ notifications: AppNotification[] }>) => ({
+        notifications: res.data.notifications,
+        unreadCount: res.meta?.unreadCount ?? 0,
+      }),
+      providesTags: ['Notification'],
+    }),
+    markNotificationRead: builder.mutation<void, string>({
+      query: (id) => ({ url: `/notifications/${id}/read`, method: 'PUT' }),
+      invalidatesTags: ['Notification'],
+    }),
+    markAllNotificationsRead: builder.mutation<void, void>({
+      query: () => ({ url: '/notifications/read-all', method: 'PUT' }),
+      invalidatesTags: ['Notification'],
+    }),
+  }),
+})
 
-export async function markAllAsRead() {
-  await api.put('/notifications/read-all')
-}
+export const { useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } =
+  notificationsApi

@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import { getMyAnalytics } from './api'
+import { useGetMyAnalyticsQuery } from './api'
 
 export function useMyAnalytics() {
-  return useQuery({ queryKey: ['analytics', 'me'], queryFn: getMyAnalytics })
+  return useGetMyAnalyticsQuery()
 }

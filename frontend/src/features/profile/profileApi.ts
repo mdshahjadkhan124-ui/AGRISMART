@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { FarmerProfile, ProfileInput } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,12 +7,19 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function getMyProfile() {
-  const res = await api.get<ApiEnvelope<{ profile: FarmerProfile | null }>>('/farmers/me')
-  return res.data.data.profile
-}
+export const profileApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getMyProfile: builder.query<FarmerProfile | null, void>({
+      query: () => '/farmers/me',
+      transformResponse: (res: ApiEnvelope<{ profile: FarmerProfile | null }>) => res.data.profile,
+      providesTags: ['Profile'],
+    }),
+    upsertMyProfile: builder.mutation<FarmerProfile, ProfileInput>({
+      query: (input) => ({ url: '/farmers/me', method: 'PUT', body: input }),
+      transformResponse: (res: ApiEnvelope<{ profile: FarmerProfile }>) => res.data.profile,
+      invalidatesTags: ['Profile'],
+    }),
+  }),
+})
 
-export async function upsertMyProfile(input: ProfileInput) {
-  const res = await api.put<ApiEnvelope<{ profile: FarmerProfile }>>('/farmers/me', input)
-  return res.data.data.profile
-}
+export const { useGetMyProfileQuery, useUpsertMyProfileMutation } = profileApi

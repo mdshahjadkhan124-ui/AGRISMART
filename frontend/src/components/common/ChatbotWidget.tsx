@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { MessageCircle, X } from 'lucide-react'
-import { queryChatbot } from '@/features/chatbot/api'
+import { useQueryChatbot } from '@/features/chatbot/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,22 +16,25 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState('')
   const [history, setHistory] = useState<ChatEntry[]>([])
 
-  const ask = useMutation({
-    mutationFn: (message: string) => queryChatbot(message, lang),
-    onSuccess: (result) => {
-      setHistory((h) => [...h, { from: 'bot', text: result.answer }])
-    },
-    onError: () => {
-      setHistory((h) => [...h, { from: 'bot', text: "Sorry, something went wrong. Please try again." }])
-    },
-  })
+  const ask = useQueryChatbot(lang)
+
+  const askMutate = (message: string) => {
+    ask.mutate(message, {
+      onSuccess: (result) => {
+        setHistory((h) => [...h, { from: 'bot', text: result.answer }])
+      },
+      onError: () => {
+        setHistory((h) => [...h, { from: 'bot', text: "Sorry, something went wrong. Please try again." }])
+      },
+    })
+  }
 
   const onSend = () => {
     const message = input.trim()
     if (!message) return
     setHistory((h) => [...h, { from: 'user', text: message }])
     setInput('')
-    ask.mutate(message)
+    askMutate(message)
   }
 
   if (!open) {

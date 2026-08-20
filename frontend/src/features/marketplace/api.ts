@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { MarketplaceProduct, ProductInput } from './types'
 
 interface ApiEnvelope<T> {
@@ -16,31 +16,45 @@ function toFormData(input: ProductInput | Partial<ProductInput>) {
   return formData
 }
 
-export async function listPublicProducts(params: { category?: string; search?: string } = {}) {
-  const res = await api.get<ApiEnvelope<{ products: MarketplaceProduct[] }>>('/marketplace/products', { params })
-  return res.data.data.products
-}
+export const marketplaceApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getPublicProducts: builder.query<MarketplaceProduct[], { category?: string; search?: string } | void>({
+      query: (params) => ({ url: '/marketplace/products', params: params ?? {} }),
+      transformResponse: (res: ApiEnvelope<{ products: MarketplaceProduct[] }>) => res.data.products,
+      providesTags: [{ type: 'Product', id: 'LIST' }],
+    }),
+    getProduct: builder.query<MarketplaceProduct, string>({
+      query: (id) => `/marketplace/products/${id}`,
+      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      providesTags: (_result, _error, id) => [{ type: 'Product', id }],
+    }),
+    getMyProducts: builder.query<MarketplaceProduct[], void>({
+      query: () => '/marketplace/products/mine',
+      transformResponse: (res: ApiEnvelope<{ products: MarketplaceProduct[] }>) => res.data.products,
+      providesTags: [{ type: 'Product', id: 'MINE' }],
+    }),
+    createProduct: builder.mutation<MarketplaceProduct, ProductInput>({
+      query: (input) => ({ url: '/marketplace/products', method: 'POST', body: toFormData(input) }),
+      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
+    }),
+    updateProduct: builder.mutation<MarketplaceProduct, { id: string; input: Partial<ProductInput> }>({
+      query: ({ id, input }) => ({ url: `/marketplace/products/${id}`, method: 'PUT', body: toFormData(input) }),
+      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
+    }),
+    deleteProduct: builder.mutation<void, string>({
+      query: (id) => ({ url: `/marketplace/products/${id}`, method: 'DELETE' }),
+      invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
+    }),
+  }),
+})
 
-export async function getProduct(id: string) {
-  const res = await api.get<ApiEnvelope<{ product: MarketplaceProduct }>>(`/marketplace/products/${id}`)
-  return res.data.data.product
-}
-
-export async function listMyProducts() {
-  const res = await api.get<ApiEnvelope<{ products: MarketplaceProduct[] }>>('/marketplace/products/mine')
-  return res.data.data.products
-}
-
-export async function createProduct(input: ProductInput) {
-  const res = await api.post<ApiEnvelope<{ product: MarketplaceProduct }>>('/marketplace/products', toFormData(input))
-  return res.data.data.product
-}
-
-export async function updateProduct(id: string, input: Partial<ProductInput>) {
-  const res = await api.put<ApiEnvelope<{ product: MarketplaceProduct }>>(`/marketplace/products/${id}`, toFormData(input))
-  return res.data.data.product
-}
-
-export async function deleteProduct(id: string) {
-  await api.delete(`/marketplace/products/${id}`)
-}
+export const {
+  useGetPublicProductsQuery,
+  useGetProductQuery,
+  useGetMyProductsQuery,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+} = marketplaceApi

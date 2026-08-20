@@ -1,4 +1,4 @@
-import { api } from '@/lib/axios'
+import { apiSlice } from '@/app/apiSlice'
 import type { ExpertProfile, ExpertProfileInput } from './types'
 
 interface ApiEnvelope<T> {
@@ -7,22 +7,34 @@ interface ApiEnvelope<T> {
   data: T
 }
 
-export async function listExperts() {
-  const res = await api.get<ApiEnvelope<{ experts: ExpertProfile[] }>>('/experts')
-  return res.data.data.experts
-}
+export const expertsApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getExperts: builder.query<ExpertProfile[], void>({
+      query: () => '/experts',
+      transformResponse: (res: ApiEnvelope<{ experts: ExpertProfile[] }>) => res.data.experts,
+      providesTags: [{ type: 'Expert', id: 'LIST' }],
+    }),
+    getExpert: builder.query<ExpertProfile, string>({
+      query: (id) => `/experts/${id}`,
+      transformResponse: (res: ApiEnvelope<{ expert: ExpertProfile }>) => res.data.expert,
+      providesTags: (_result, _error, id) => [{ type: 'Expert', id }],
+    }),
+    getMyExpertProfile: builder.query<ExpertProfile | null, void>({
+      query: () => '/experts/me',
+      transformResponse: (res: ApiEnvelope<{ profile: ExpertProfile | null }>) => res.data.profile,
+      providesTags: ['ExpertProfile'],
+    }),
+    upsertMyExpertProfile: builder.mutation<ExpertProfile, ExpertProfileInput>({
+      query: (input) => ({ url: '/experts/me', method: 'PUT', body: input }),
+      transformResponse: (res: ApiEnvelope<{ profile: ExpertProfile }>) => res.data.profile,
+      invalidatesTags: ['ExpertProfile', { type: 'Expert', id: 'LIST' }],
+    }),
+  }),
+})
 
-export async function getExpert(id: string) {
-  const res = await api.get<ApiEnvelope<{ expert: ExpertProfile }>>(`/experts/${id}`)
-  return res.data.data.expert
-}
-
-export async function getMyExpertProfile() {
-  const res = await api.get<ApiEnvelope<{ profile: ExpertProfile | null }>>('/experts/me')
-  return res.data.data.profile
-}
-
-export async function upsertMyExpertProfile(input: ExpertProfileInput) {
-  const res = await api.put<ApiEnvelope<{ profile: ExpertProfile }>>('/experts/me', input)
-  return res.data.data.profile
-}
+export const {
+  useGetExpertsQuery,
+  useGetExpertQuery,
+  useGetMyExpertProfileQuery,
+  useUpsertMyExpertProfileMutation,
+} = expertsApi

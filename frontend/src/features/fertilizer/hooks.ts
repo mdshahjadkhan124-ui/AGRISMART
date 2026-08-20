@@ -1,14 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as api from './api'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
+import { useGetFertilizerHistoryQuery, useCreateFertilizerRecommendationMutation } from './api'
 
 export function useFertilizerHistory() {
-  return useQuery({ queryKey: ['fertilizer-recommendations'], queryFn: api.listFertilizerHistory })
+  return useGetFertilizerHistoryQuery()
 }
 
 export function useCreateFertilizerRecommendation() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.createFertilizerRecommendation,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fertilizer-recommendations'] }),
-  })
+  return useMutationCompat(useCreateFertilizerRecommendationMutation())
 }

@@ -109,10 +109,12 @@ export default function FertilizerRecommendationPage() {
         </CardContent>
       </Card>
 
-      {createRecommendation.data && (
+      {createRecommendation.data && (() => {
+        const recommendation = createRecommendation.data
+        return (
         <div className="flex flex-col gap-3">
           {(['nitrogen', 'phosphorus', 'potassium'] as const).map((key) => {
-            const rec = createRecommendation.data.nutrients[key]
+            const rec = recommendation.nutrients[key]
             return (
               <Card key={key}>
                 <CardHeader className="flex-row items-center justify-between">
@@ -139,19 +141,20 @@ export default function FertilizerRecommendationPage() {
               <CardTitle className="text-base">Soil pH</CardTitle>
             </CardHeader>
             <CardContent className="text-muted-foreground text-sm">
-              {createRecommendation.data.phAmendment.dosageKgPerAcre > 0 ? (
+              {recommendation.phAmendment.dosageKgPerAcre > 0 ? (
                 <p>
-                  Apply <span className="text-foreground font-medium">{createRecommendation.data.phAmendment.amendment}</span>{' '}
-                  — {createRecommendation.data.phAmendment.dosageKgPerAcre} kg/acre
+                  Apply <span className="text-foreground font-medium">{recommendation.phAmendment.amendment}</span>{' '}
+                  — {recommendation.phAmendment.dosageKgPerAcre} kg/acre
                 </p>
               ) : (
                 <p className="text-foreground font-medium">No amendment needed</p>
               )}
-              <p className="mt-1">{createRecommendation.data.phAmendment.note}</p>
+              <p className="mt-1">{recommendation.phAmendment.note}</p>
             </CardContent>
           </Card>
         </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

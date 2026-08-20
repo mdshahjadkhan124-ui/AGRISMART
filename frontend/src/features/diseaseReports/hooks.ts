@@ -1,35 +1,30 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import * as api from './api'
+import { useMutationCompat } from '@/app/rtkQueryCompat'
+import {
+  useGetMyDiseaseReportsQuery,
+  useGetMyDiseaseReportQuery,
+  useCreateDiseaseReportMutation,
+  useGetDiseaseQueueQuery,
+  useRespondToDiseaseReportMutation,
+} from './api'
 import type { RespondInput } from './types'
 
 export function useMyDiseaseReports() {
-  return useQuery({ queryKey: ['disease-reports', 'mine'], queryFn: api.listMyDiseaseReports })
+  return useGetMyDiseaseReportsQuery()
 }
 
 export function useMyDiseaseReport(id: string) {
-  return useQuery({
-    queryKey: ['disease-reports', 'mine', id],
-    queryFn: () => api.getMyDiseaseReport(id),
-    enabled: Boolean(id),
-  })
+  return useGetMyDiseaseReportQuery(id, { skip: !id })
 }
 
 export function useCreateDiseaseReport() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: api.createDiseaseReport,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['disease-reports', 'mine'] }),
-  })
+  return useMutationCompat(useCreateDiseaseReportMutation())
 }
 
 export function useDiseaseQueue() {
-  return useQuery({ queryKey: ['disease-reports', 'queue'], queryFn: api.listDiseaseQueue })
+  return useGetDiseaseQueueQuery()
 }
 
 export function useRespondToDiseaseReport() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: RespondInput }) => api.respondToDiseaseReport(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['disease-reports', 'queue'] }),
-  })
+  const [trigger, state] = useRespondToDiseaseReportMutation()
+  return useMutationCompat([(arg: { id: string; input: RespondInput }) => trigger(arg), state])
 }
