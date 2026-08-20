@@ -6,39 +6,18 @@ import { useCallback } from 'react'
 // onError})`, `.isPending`). Rather than touch 40+ page files, every
 // feature's hooks.ts wraps its RTK Query mutation hooks with this adapter so
 // the exported hook shape — and every page's call site — stays identical.
-interface RtkMutationTrigger<Arg, Result> {
-  (arg: Arg): { unwrap: () => Promise<Result> }
-}
-
-interface RtkMutationState<Result> {
-  data?: Result
-  error?: unknown
-  isLoading: boolean
-  isSuccess: boolean
-  isError: boolean
-  reset: () => void
-}
-
-interface MutateOptions<Result> {
-  onSuccess?: (data: Result) => void
-  onError?: (error: unknown) => void
-}
-
-export function useMutationCompat<Arg, Result>([trigger, state]: readonly [
-  RtkMutationTrigger<Arg, Result>,
-  RtkMutationState<Result>,
-]) {
+export function useMutationCompat([trigger, state]) {
   const mutate = useCallback(
-    (arg: Arg, options?: MutateOptions<Result>) => {
+    (arg, options) => {
       trigger(arg)
         .unwrap()
         .then((data) => options?.onSuccess?.(data))
-        .catch((error: unknown) => options?.onError?.(error))
+        .catch((error) => options?.onError?.(error))
     },
     [trigger]
   )
 
-  const mutateAsync = useCallback((arg: Arg) => trigger(arg).unwrap(), [trigger])
+  const mutateAsync = useCallback((arg) => trigger(arg).unwrap(), [trigger])
 
   return {
     mutate,
