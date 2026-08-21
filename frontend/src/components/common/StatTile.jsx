@@ -1,12 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
-
-interface StatTileProps {
-  label: string
-  value: string | number
-  icon?: LucideIcon
-}
-
-export default function StatTile({ label, value, icon: Icon }: StatTileProps) {
+export default function StatTile({ label, value, icon: Icon }) {
   return (
     <div className="border-t-2 border-primary bg-card px-5 py-6">
       <div className="flex items-start justify-between gap-3">

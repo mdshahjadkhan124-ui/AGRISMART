@@ -5,20 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface ChatEntry {
-  from: 'user' | 'bot'
-  text: string
-}
-
 export default function ChatbotWidget() {
   const [open, setOpen] = useState(false)
-  const [lang, setLang] = useState<'en' | 'hi'>('en')
+  const [lang, setLang] = useState('en')
   const [input, setInput] = useState('')
-  const [history, setHistory] = useState<ChatEntry[]>([])
+  const [history, setHistory] = useState([])
 
   const ask = useQueryChatbot(lang)
 
-  const askMutate = (message: string) => {
+  const askMutate = (message) => {
     ask.mutate(message, {
       onSuccess: (result) => {
         setHistory((h) => [...h, { from: 'bot', text: result.answer }])

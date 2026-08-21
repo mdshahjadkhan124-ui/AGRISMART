@@ -1,12 +1,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface CountBarChartProps {
-  title: string
-  counts: Record<string, number>
-}
-
-export default function CountBarChart({ title, counts }: CountBarChartProps) {
+export default function CountBarChart({ title, counts }) {
   const data = Object.entries(counts).map(([name, value]) => ({
     name: name.replace('_', ' '),
     value,

@@ -4,11 +4,7 @@ import { useAppSelector } from '@/app/hooks'
 import { cn } from '@/lib/utils'
 import { navItems } from './navConfig'
 
-interface SidebarProps {
-  onNavigate?: () => void
-}
-
-export default function Sidebar({ onNavigate }: SidebarProps) {
+export default function Sidebar({ onNavigate }) {
   const user = useAppSelector((state) => state.auth.user)
   if (!user) return null
 

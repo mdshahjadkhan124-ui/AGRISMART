@@ -6,11 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import NotificationBell from '@/components/common/NotificationBell'
 
-interface TopbarProps {
-  onMenuClick: () => void
-}
-
-function initials(name: string) {
+function initials(name) {
   return name
     .split(' ')
     .filter(Boolean)
@@ -19,7 +15,7 @@ function initials(name: string) {
     .join('')
 }
 
-export default function Topbar({ onMenuClick }: TopbarProps) {
+export default function Topbar({ onMenuClick }) {
   const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.auth.user)
   if (!user) return null

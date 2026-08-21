@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react'
 import {
   Home,
   Sprout,
@@ -16,18 +15,10 @@ import {
   Users,
   ScrollText,
 } from 'lucide-react'
-import type { Role } from '@/features/auth/types'
 
-export interface NavItem {
-  to: string
-  label: string
-  icon: LucideIcon
-  roles: Role[]
-}
+const allRoles = ['farmer', 'expert', 'officer', 'seller', 'gov_admin', 'super_admin']
 
-const allRoles: Role[] = ['farmer', 'expert', 'officer', 'seller', 'gov_admin', 'super_admin']
-
-export const navItems: NavItem[] = [
+export const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: Home, roles: allRoles },
   { to: '/farms', label: 'My Farms', icon: Sprout, roles: ['farmer'] },
   { to: '/crop-suggestion', label: 'Crop Suggestion', icon: Leaf, roles: ['farmer'] },

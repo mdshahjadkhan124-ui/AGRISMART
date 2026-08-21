@@ -1,16 +1,8 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import type { LucideIcon } from 'lucide-react'
 import { ArrowRight } from 'lucide-react'
 
-interface QuickActionCardProps {
-  to: string
-  title: string
-  description: string
-  icon: LucideIcon
-}
-
-export default function QuickActionCard({ to, title, description, icon: Icon }: QuickActionCardProps) {
+export default function QuickActionCard({ to, title, description, icon: Icon }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
       <Link

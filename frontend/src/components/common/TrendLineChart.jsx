@@ -1,12 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface TrendLineChartProps {
-  title: string
-  data: { date: string; score: number }[]
-}
-
-export default function TrendLineChart({ title, data }: TrendLineChartProps) {
+export default function TrendLineChart({ title, data }) {
   const formatted = data.map((d) => ({ ...d, date: new Date(d.date).toLocaleDateString() }))
 
   return (
