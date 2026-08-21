@@ -3,7 +3,6 @@ import { useAppDispatch } from '@/app/hooks'
 import { useMutationCompat } from '@/app/rtkQueryCompat'
 import { getSocket } from '@/lib/socket'
 import { notificationsApi, useGetNotificationsQuery, useMarkNotificationReadMutation, useMarkAllNotificationsReadMutation } from './api'
-import type { AppNotification } from './types'
 
 export function useNotifications() {
   const dispatch = useAppDispatch()
@@ -15,7 +14,7 @@ export function useNotifications() {
     const socket = getSocket()
     if (!socket) return
 
-    const onNew = (incoming: Omit<AppNotification, '_id' | 'isRead'> & { id: string }) => {
+    const onNew = (incoming) => {
       dispatch(
         notificationsApi.util.updateQueryData('getNotifications', undefined, (current) => {
           current.notifications.unshift({

@@ -1,33 +1,20 @@
 import { apiSlice } from '@/app/apiSlice'
-import type { AppNotification } from './types'
-
-interface ApiEnvelope<T> {
-  success: boolean
-  message: string
-  data: T
-  meta?: { unreadCount: number }
-}
-
-export interface NotificationsResult {
-  notifications: AppNotification[]
-  unreadCount: number
-}
 
 export const notificationsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getNotifications: builder.query<NotificationsResult, void>({
+    getNotifications: builder.query({
       query: () => '/notifications',
-      transformResponse: (res: ApiEnvelope<{ notifications: AppNotification[] }>) => ({
+      transformResponse: (res) => ({
         notifications: res.data.notifications,
         unreadCount: res.meta?.unreadCount ?? 0,
       }),
       providesTags: ['Notification'],
     }),
-    markNotificationRead: builder.mutation<void, string>({
+    markNotificationRead: builder.mutation({
       query: (id) => ({ url: `/notifications/${id}/read`, method: 'PUT' }),
       invalidatesTags: ['Notification'],
     }),
-    markAllNotificationsRead: builder.mutation<void, void>({
+    markAllNotificationsRead: builder.mutation({
       query: () => ({ url: '/notifications/read-all', method: 'PUT' }),
       invalidatesTags: ['Notification'],
     }),
