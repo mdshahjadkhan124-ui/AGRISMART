@@ -6,13 +6,12 @@ import {
   useGetDiseaseQueueQuery,
   useRespondToDiseaseReportMutation,
 } from './api'
-import type { RespondInput } from './types'
 
 export function useMyDiseaseReports() {
   return useGetMyDiseaseReportsQuery()
 }
 
-export function useMyDiseaseReport(id: string) {
+export function useMyDiseaseReport(id) {
   return useGetMyDiseaseReportQuery(id, { skip: !id })
 }
 
@@ -26,5 +25,5 @@ export function useDiseaseQueue() {
 
 export function useRespondToDiseaseReport() {
   const [trigger, state] = useRespondToDiseaseReportMutation()
-  return useMutationCompat([(arg: { id: string; input: RespondInput }) => trigger(arg), state])
+  return useMutationCompat([(arg) => trigger(arg), state])
 }

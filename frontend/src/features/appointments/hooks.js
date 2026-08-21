@@ -12,13 +12,12 @@ import {
   useSendMessageMutation,
   useGetCallInfoQuery,
 } from './api'
-import type { ChatMessage } from './types'
 
 export function useMyAppointments() {
   return useGetMyAppointmentsQuery()
 }
 
-export function useAppointment(id: string) {
+export function useAppointment(id) {
   return useGetAppointmentQuery(id, { skip: !id })
 }
 
@@ -26,19 +25,16 @@ export function useBookAppointment() {
   return useMutationCompat(useBookAppointmentMutation())
 }
 
-export function useUpdateAppointmentStatus(id: string) {
+export function useUpdateAppointmentStatus(id) {
   const [trigger, state] = useUpdateAppointmentStatusMutation()
-  return useMutationCompat([
-    (arg: { status: string; expertNotes?: string }) => trigger({ id, ...arg }),
-    state,
-  ])
+  return useMutationCompat([(arg) => trigger({ id, ...arg }), state])
 }
 
 // Joins the appointment's chat room over the socket (server re-checks
 // ownership on every join) and appends messages pushed in real time.
 // Falls back to a slow poll in case the socket isn't connected — the REST
 // endpoint stays the source of truth either way.
-export function useMessages(appointmentId: string) {
+export function useMessages(appointmentId) {
   const dispatch = useAppDispatch()
   const query = useGetMessagesQuery(appointmentId, { skip: !appointmentId, pollingInterval: 15000 })
 
@@ -49,7 +45,7 @@ export function useMessages(appointmentId: string) {
 
     socket.emit('chat:join', appointmentId)
 
-    const onMessage = (message: ChatMessage) => {
+    const onMessage = (message) => {
       if (message.appointment !== appointmentId) return
       dispatch(
         appointmentsApi.util.updateQueryData('getMessages', appointmentId, (current) => {
@@ -68,17 +64,17 @@ export function useMessages(appointmentId: string) {
   return query
 }
 
-export function useSendMessage(appointmentId: string) {
+export function useSendMessage(appointmentId) {
   const [trigger, state] = useSendMessageMutation()
-  return useMutationCompat([(text: string) => trigger({ appointmentId, text }), state])
+  return useMutationCompat([(text) => trigger({ appointmentId, text }), state])
 }
 
 // Lightweight typing indicator: emits while the user types (throttled) and
 // tracks whether the other participant is currently typing. Pure socket
 // traffic — no REST call, so it stays outside RTK Query entirely.
-export function useTypingIndicator(appointmentId: string) {
+export function useTypingIndicator(appointmentId) {
   const [otherTyping, setOtherTyping] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const timeoutRef = useRef(undefined)
   const lastEmitRef = useRef(0)
 
   useEffect(() => {
@@ -109,6 +105,6 @@ export function useTypingIndicator(appointmentId: string) {
   return { otherTyping, notifyTyping }
 }
 
-export function useCallInfo(appointmentId: string) {
+export function useCallInfo(appointmentId) {
   return useGetCallInfoQuery(appointmentId, { skip: !appointmentId })
 }

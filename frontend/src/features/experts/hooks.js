@@ -5,7 +5,7 @@ export function useExperts() {
   return useGetExpertsQuery()
 }
 
-export function useExpert(id: string) {
+export function useExpert(id) {
   return useGetExpertQuery(id, { skip: !id })
 }
 
