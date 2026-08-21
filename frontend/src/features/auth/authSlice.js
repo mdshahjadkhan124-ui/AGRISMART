@@ -1,19 +1,9 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { connectSocket, disconnectSocket } from '@/lib/socket'
 import { apiSlice } from '@/app/apiSlice'
 import { authApi } from './authApi'
-import type { AuthResponseData, User } from './types'
 
-type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'
-
-interface AuthState {
-  user: User | null
-  accessToken: string | null
-  status: AuthStatus
-  error: string | null
-}
-
-const initialState: AuthState = {
+const initialState = {
   user: null,
   accessToken: null,
   status: 'idle',
@@ -22,51 +12,42 @@ const initialState: AuthState = {
 
 // RTK Query's `.unwrap()` rejects with the FetchBaseQueryError itself, whose
 // `data` field is our backend's parsed JSON error body.
-function extractErrorMessage(err: unknown): string {
+function extractErrorMessage(err) {
   if (err && typeof err === 'object' && 'data' in err) {
-    const data = (err as { data?: { message?: string; details?: string[] } }).data
+    const data = err.data
     return data?.details?.[0] ?? data?.message ?? 'Something went wrong'
   }
   return 'Something went wrong'
 }
 
-export const login = createAsyncThunk(
-  'auth/login',
-  async (payload: { email: string; password: string }, { dispatch, rejectWithValue }) => {
-    try {
-      return await dispatch(authApi.endpoints.login.initiate(payload)).unwrap()
-    } catch (err) {
-      return rejectWithValue(extractErrorMessage(err))
-    }
+export const login = createAsyncThunk('auth/login', async (payload, { dispatch, rejectWithValue }) => {
+  try {
+    return await dispatch(authApi.endpoints.login.initiate(payload)).unwrap()
+  } catch (err) {
+    return rejectWithValue(extractErrorMessage(err))
   }
-)
+})
 
-export const register = createAsyncThunk(
-  'auth/register',
-  async (payload: { name: string; email: string; password: string; phone?: string }, { dispatch, rejectWithValue }) => {
-    try {
-      return await dispatch(authApi.endpoints.register.initiate(payload)).unwrap()
-    } catch (err) {
-      return rejectWithValue(extractErrorMessage(err))
-    }
+export const register = createAsyncThunk('auth/register', async (payload, { dispatch, rejectWithValue }) => {
+  try {
+    return await dispatch(authApi.endpoints.register.initiate(payload)).unwrap()
+  } catch (err) {
+    return rejectWithValue(extractErrorMessage(err))
   }
-)
+})
 
-export const googleLogin = createAsyncThunk(
-  'auth/googleLogin',
-  async (idToken: string, { dispatch, rejectWithValue }) => {
-    try {
-      return await dispatch(authApi.endpoints.googleLogin.initiate(idToken)).unwrap()
-    } catch (err) {
-      return rejectWithValue(extractErrorMessage(err))
-    }
+export const googleLogin = createAsyncThunk('auth/googleLogin', async (idToken, { dispatch, rejectWithValue }) => {
+  try {
+    return await dispatch(authApi.endpoints.googleLogin.initiate(idToken)).unwrap()
+  } catch (err) {
+    return rejectWithValue(extractErrorMessage(err))
   }
-)
+})
 
 // Silently re-establishes a session on app load using the httpOnly refresh
 // cookie. Rejecting here just means "not logged in" — never surfaced as an
 // error to the user.
-export const bootstrapSession = createAsyncThunk('auth/bootstrap', async (_: void, { dispatch, rejectWithValue }) => {
+export const bootstrapSession = createAsyncThunk('auth/bootstrap', async (_, { dispatch, rejectWithValue }) => {
   try {
     return await dispatch(authApi.endpoints.refresh.initiate()).unwrap()
   } catch (err) {
@@ -74,7 +55,7 @@ export const bootstrapSession = createAsyncThunk('auth/bootstrap', async (_: voi
   }
 })
 
-export const logout = createAsyncThunk('auth/logout', async (_: void, { dispatch }) => {
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) => {
   try {
     await dispatch(authApi.endpoints.logout.initiate()).unwrap()
   } catch {
@@ -86,7 +67,7 @@ export const logout = createAsyncThunk('auth/logout', async (_: void, { dispatch
   }
 })
 
-function applyCredentials(state: AuthState, payload: AuthResponseData) {
+function applyCredentials(state, payload) {
   state.status = 'authenticated'
   state.user = payload.user
   state.accessToken = payload.accessToken
@@ -100,7 +81,7 @@ const authSlice = createSlice({
   reducers: {
     // Dispatched directly by apiSlice's baseQueryWithReauth after a
     // successful silent refresh triggered by some other request's 401.
-    credentialsReceived(state, action: PayloadAction<AuthResponseData>) {
+    credentialsReceived(state, action) {
       applyCredentials(state, action.payload)
     },
     // Dispatched directly by apiSlice's baseQueryWithReauth when that
@@ -121,7 +102,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => applyCredentials(state, action.payload))
       .addCase(login.rejected, (state, action) => {
         state.status = 'unauthenticated'
-        state.error = action.payload as string
+        state.error = action.payload
       })
 
       .addCase(register.pending, (state) => {
@@ -131,7 +112,7 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => applyCredentials(state, action.payload))
       .addCase(register.rejected, (state, action) => {
         state.status = 'unauthenticated'
-        state.error = action.payload as string
+        state.error = action.payload
       })
 
       .addCase(googleLogin.pending, (state) => {
@@ -141,7 +122,7 @@ const authSlice = createSlice({
       .addCase(googleLogin.fulfilled, (state, action) => applyCredentials(state, action.payload))
       .addCase(googleLogin.rejected, (state, action) => {
         state.status = 'unauthenticated'
-        state.error = action.payload as string
+        state.error = action.payload
       })
 
       .addCase(bootstrapSession.pending, (state) => {
