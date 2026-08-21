@@ -1,37 +1,30 @@
 import { apiSlice } from '@/app/apiSlice'
-import type { CreateOrderInput, Order } from './types'
-
-interface ApiEnvelope<T> {
-  success: boolean
-  message: string
-  data: T
-}
 
 export const ordersApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    createOrder: builder.mutation<Order, CreateOrderInput>({
+    createOrder: builder.mutation({
       query: (input) => ({ url: '/marketplace/orders', method: 'POST', body: input }),
-      transformResponse: (res: ApiEnvelope<{ order: Order }>) => res.data.order,
+      transformResponse: (res) => res.data.order,
       invalidatesTags: [{ type: 'Order', id: 'MINE' }],
     }),
-    getMyOrders: builder.query<Order[], void>({
+    getMyOrders: builder.query({
       query: () => '/marketplace/orders',
-      transformResponse: (res: ApiEnvelope<{ orders: Order[] }>) => res.data.orders,
+      transformResponse: (res) => res.data.orders,
       providesTags: [{ type: 'Order', id: 'MINE' }],
     }),
-    getMyOrder: builder.query<Order, string>({
+    getMyOrder: builder.query({
       query: (id) => `/marketplace/orders/${id}`,
-      transformResponse: (res: ApiEnvelope<{ order: Order }>) => res.data.order,
+      transformResponse: (res) => res.data.order,
       providesTags: (_result, _error, id) => [{ type: 'Order', id }],
     }),
-    getSellerOrders: builder.query<Order[], void>({
+    getSellerOrders: builder.query({
       query: () => '/marketplace/orders/seller',
-      transformResponse: (res: ApiEnvelope<{ orders: Order[] }>) => res.data.orders,
+      transformResponse: (res) => res.data.orders,
       providesTags: [{ type: 'Order', id: 'SELLER' }],
     }),
-    updateOrderStatus: builder.mutation<Order, { id: string; status: string }>({
+    updateOrderStatus: builder.mutation({
       query: ({ id, status }) => ({ url: `/marketplace/orders/${id}/status`, method: 'PUT', body: { status } }),
-      transformResponse: (res: ApiEnvelope<{ order: Order }>) => res.data.order,
+      transformResponse: (res) => res.data.order,
       invalidatesTags: [{ type: 'Order', id: 'SELLER' }],
     }),
   }),

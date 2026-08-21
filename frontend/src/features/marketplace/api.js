@@ -1,13 +1,6 @@
 import { apiSlice } from '@/app/apiSlice'
-import type { MarketplaceProduct, ProductInput } from './types'
 
-interface ApiEnvelope<T> {
-  success: boolean
-  message: string
-  data: T
-}
-
-function toFormData(input: ProductInput | Partial<ProductInput>) {
+function toFormData(input) {
   const formData = new FormData()
   Object.entries(input).forEach(([key, value]) => {
     if (value == null) return
@@ -18,32 +11,32 @@ function toFormData(input: ProductInput | Partial<ProductInput>) {
 
 export const marketplaceApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    getPublicProducts: builder.query<MarketplaceProduct[], { category?: string; search?: string } | void>({
+    getPublicProducts: builder.query({
       query: (params) => ({ url: '/marketplace/products', params: params ?? {} }),
-      transformResponse: (res: ApiEnvelope<{ products: MarketplaceProduct[] }>) => res.data.products,
+      transformResponse: (res) => res.data.products,
       providesTags: [{ type: 'Product', id: 'LIST' }],
     }),
-    getProduct: builder.query<MarketplaceProduct, string>({
+    getProduct: builder.query({
       query: (id) => `/marketplace/products/${id}`,
-      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      transformResponse: (res) => res.data.product,
       providesTags: (_result, _error, id) => [{ type: 'Product', id }],
     }),
-    getMyProducts: builder.query<MarketplaceProduct[], void>({
+    getMyProducts: builder.query({
       query: () => '/marketplace/products/mine',
-      transformResponse: (res: ApiEnvelope<{ products: MarketplaceProduct[] }>) => res.data.products,
+      transformResponse: (res) => res.data.products,
       providesTags: [{ type: 'Product', id: 'MINE' }],
     }),
-    createProduct: builder.mutation<MarketplaceProduct, ProductInput>({
+    createProduct: builder.mutation({
       query: (input) => ({ url: '/marketplace/products', method: 'POST', body: toFormData(input) }),
-      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      transformResponse: (res) => res.data.product,
       invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
     }),
-    updateProduct: builder.mutation<MarketplaceProduct, { id: string; input: Partial<ProductInput> }>({
+    updateProduct: builder.mutation({
       query: ({ id, input }) => ({ url: `/marketplace/products/${id}`, method: 'PUT', body: toFormData(input) }),
-      transformResponse: (res: ApiEnvelope<{ product: MarketplaceProduct }>) => res.data.product,
+      transformResponse: (res) => res.data.product,
       invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
     }),
-    deleteProduct: builder.mutation<void, string>({
+    deleteProduct: builder.mutation({
       query: (id) => ({ url: `/marketplace/products/${id}`, method: 'DELETE' }),
       invalidatesTags: [{ type: 'Product', id: 'LIST' }, { type: 'Product', id: 'MINE' }],
     }),

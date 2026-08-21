@@ -11,7 +11,7 @@ export function useMyOrders() {
   return useGetMyOrdersQuery()
 }
 
-export function useMyOrder(id: string) {
+export function useMyOrder(id) {
   return useGetMyOrderQuery(id, { skip: !id })
 }
 
@@ -25,5 +25,5 @@ export function useSellerOrders() {
 
 export function useUpdateOrderStatus() {
   const [trigger, state] = useUpdateOrderStatusMutation()
-  return useMutationCompat([(arg: { id: string; status: string }) => trigger(arg), state])
+  return useMutationCompat([(arg) => trigger(arg), state])
 }

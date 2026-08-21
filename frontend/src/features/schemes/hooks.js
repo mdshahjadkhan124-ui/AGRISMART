@@ -1,12 +1,11 @@
 import { useMutationCompat } from '@/app/rtkQueryCompat'
 import { useGetSchemesQuery, useGetSchemeQuery, useCreateSchemeMutation, useUpdateSchemeMutation, useDeleteSchemeMutation } from './api'
-import type { SchemeInput } from './types'
 
-export function useSchemes(params: { category?: string; state?: string; search?: string; includeInactive?: boolean } = {}) {
+export function useSchemes(params = {}) {
   return useGetSchemesQuery(params)
 }
 
-export function useScheme(id: string) {
+export function useScheme(id) {
   return useGetSchemeQuery(id, { skip: !id })
 }
 
@@ -14,9 +13,9 @@ export function useCreateScheme() {
   return useMutationCompat(useCreateSchemeMutation())
 }
 
-export function useUpdateScheme(id: string) {
+export function useUpdateScheme(id) {
   const [trigger, state] = useUpdateSchemeMutation()
-  return useMutationCompat([(input: Partial<SchemeInput>) => trigger({ id, input }), state])
+  return useMutationCompat([(input) => trigger({ id, input }), state])
 }
 
 export function useDeleteScheme() {
